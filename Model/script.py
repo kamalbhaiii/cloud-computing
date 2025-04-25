@@ -1,53 +1,92 @@
+from picamera2 import Picamera2
 import cv2
-from ultralytics import YOLO
 import time
+import numpy as np
+from tflite_runtime.interpreter import Interpreter, load_delegate
 
-# Load the Coral-compatible YOLOv8 model
-model = YOLO("best_float32_edgetpu.tflite")
+# ====== CONFIG ======
+MODEL_PATH = "best_float32_edgetpu.tflite"
+LABEL_PATH = "labelmap.txt"
+INPUT_SIZE = 320  # Roboflow will provide this
+CONF_THRESHOLD = 0.4
 
-# Open the Pi Camera
-cap = cv2.VideoCapture(0)
+# ====== Load labels ======
+with open(LABEL_PATH, "r") as f:
+    labels = [line.strip() for line in f.readlines()]
 
-# Set resolution (optional)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+# ====== Load TFLite model with EdgeTPU delegate ======
+interpreter = Interpreter(
+    model_path=MODEL_PATH,
+    experimental_delegates=[load_delegate("libedgetpu.so.1")]
+)
+interpreter.allocate_tensors()
 
-if not cap.isOpened():
-    print("âŒ Failed to open Pi Camera.")
-    exit()
+input_details = interpreter.get_input_details()
+output_details = interpreter.get_output_details()
 
-print("ðŸ“¸ Pi Camera opened successfully. Running inference...")
+input_height = input_details[0]['shape'][1]
+input_width = input_details[0]['shape'][2]
 
-try:
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            print("âŒ Failed to capture frame.")
-            break
+print(f"[INFO] Model expects input size: {input_width}x{input_height}")
 
-        start_time = time.time()
-        
-        # Run inference
-        results = model.predict(source=frame, device='tpu')
-        
-        # Show results
-        annotated_frame = results[0].plot()
-        end_time = time.time()
+# ====== Init camera ======
+picam2 = Picamera2()
+picam2.preview_configuration.main.size = (640, 480)
+picam2.preview_configuration.main.format = "RGB888"
+picam2.configure("preview")
+picam2.start()
+time.sleep(1)
 
-        # FPS display
-        fps = 1 / (end_time - start_time)
-        cv2.putText(annotated_frame, f'FPS: {fps:.2f}', (10, 25), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
+# ====== Preprocessing ======
+def preprocess(image):
+    image_resized = cv2.resize(image, (input_width, input_height))
+    image_normalized = image_resized.astype(np.float32) / 255.0  
+    return np.expand_dims(image_normalized, axis=0)
 
-        # Display annotated frame
-        cv2.imshow("YOLOv8 + Coral TPU Inference", annotated_frame)
+# ====== Postprocessing (YOLOv8-specific output) ======
+def draw_detections(image, output_data):
+    height, width, _ = image.shape
 
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+    for detection in output_data:
+        if detection[4] < CONF_THRESHOLD:
+            continue
+        class_id = int(detection[5])
+        score = float(detection[4])
+        x_center, y_center, w, h = detection[0:4]
 
-except KeyboardInterrupt:
-    print("ðŸ›‘ Inference stopped by user.")
+        # Scale coords to original image
+        x_center *= width
+        y_center *= height
+        w *= width
+        h *= height
 
-# Cleanup
-cap.release()
+        x1 = int(x_center - w / 2)
+        y1 = int(y_center - h / 2)
+        x2 = int(x_center + w / 2)
+        y2 = int(y_center + h / 2)
+
+        label = f"{labels[class_id]}: {score:.2f}"
+        cv2.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 2)
+        cv2.putText(image, label, (x1, y1 - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+
+# ====== Main loop ======
+while True:
+    frame = picam2.capture_array()
+    input_tensor = preprocess(frame)
+
+    interpreter.set_tensor(input_details[0]['index'], input_tensor)
+    interpreter.invoke()
+
+    output_data = interpreter.get_tensor(output_details[0]['index'])[0]
+
+    # YOLOv8 output format: [x, y, w, h, confidence, class_id]
+    # output_data shape: (N, 6)
+    draw_detections(frame, output_data)
+
+    cv2.imshow("Wildlife Detection", frame)
+    if cv2.waitKey(1) & 0xFF == ord("q"):
+        break
+
 cv2.destroyAllWindows()
+
