@@ -6,7 +6,7 @@ import tensorflow as tf
 MODEL_PATH = "best_float32.tflite" 
 LABEL_PATH = "labelmap.txt"
 INPUT_SIZE = 320 
-CONF_THRESHOLD = 0.4
+CONF_THRESHOLD = 0.2
 IMAGE_PATH = "test.jpg"  
 OUTPUT_PATH = "output_image.jpg"  
 
@@ -43,6 +43,8 @@ def preprocess(image):
 def draw_detections(image, output_data):
     height, width, _ = image.shape
     detections_found = False
+
+    print(output_data[4])
 
     for detection in output_data:
         if detection[4] < CONF_THRESHOLD:
