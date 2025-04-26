@@ -9,16 +9,16 @@ spec:
     matchLabels:
       app: prometheus
   template:
-    nodeName: worker-node-3
     metadata:
       labels:
         app: prometheus
     spec:
+      nodeName: worker-node-3
       containers:
       - name: prometheus
         image: prom/prometheus:v2.45.0
         args:
-        - "--config.file=/etc/prometheus/Prometheus-scrape.yaml"
+        - "--config.file=/etc/prometheus/Prometheus-config.yaml"
         - "--storage.tsdb.path=/prometheus"
         ports:
         - containerPort: 9090
@@ -50,4 +50,5 @@ spec:
   - protocol: TCP
     port: 80
     targetPort: 9090
-  type: ClusterIP
+    nodePort: 30030
+  type: NodePort

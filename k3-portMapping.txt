@@ -1,4 +1,5 @@
 30000: Frontend
 30010: MinIO (API)
 30020: MinIO (Console)
-30030: Monitoring
+30030: Prometheus
+30040: Grafana

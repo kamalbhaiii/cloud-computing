@@ -9,11 +9,11 @@ spec:
     matchLabels:
       app: grafana
   template:
-    nodeName: worker-node-3
     metadata:
       labels:
         app: grafana
     spec:
+      nodeName: worker-node-3
       containers:
       - name: grafana
         image: grafana/grafana:9.5.2
@@ -35,5 +35,5 @@ spec:
   - protocol: TCP
     port: 80
     targetPort: 3000
-    nodePort: 30030
+    nodePort: 30040
   type: NodePort
