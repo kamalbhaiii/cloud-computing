@@ -8,7 +8,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
-  storageClassName: local-path
+  storageClassName: minio-local-path
   local:
     path: /mnt/minio-data
   nodeAffinity:
@@ -20,6 +20,13 @@ spec:
           values:
           - worker-node-2
 ---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: minio-local-path
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -30,4 +37,4 @@ spec:
   resources:
     requests:
       storage: 20Gi
-  storageClassName: local-path
+  storageClassName: minio-local-path
