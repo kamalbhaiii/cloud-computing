@@ -30,5 +30,32 @@ data:
           namespaces:
             names:
             - default
+        relabel_configs:
+        - source_labels: [__meta_kubernetes_service_name]
+          action: keep
+          regex: kubernetes
+        - source_labels: [__meta_kubernetes_endpoint_port_name]
+          action: keep
+          regex: https
         authorization:
           credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+      - job_name: 'kubelet'
+        scheme: https
+        tls_config:
+          insecure_skip_verify: true
+        kubernetes_sd_configs:
+        - role: node
+        relabel_configs:
+        - action: labelmap
+          regex: __meta_kubernetes_node_label_(.+)
+        authorization:
+          credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+      - job_name: 'kube-state-metrics'
+        kubernetes_sd_configs:
+        - role: pod
+          namespaces:
+            names:
+            - default
+          selectors:
+          - role: pod
+            label: "app=kube-state-metrics"
