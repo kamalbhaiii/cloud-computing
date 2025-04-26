@@ -16,7 +16,7 @@ CONF_THRESHOLD = 0.5
 TEMP_IMAGE_PATH = "temp_frame.jpg"
 
 # ====== MinIO CONFIG ======
-MINIO_ENDPOINT = "http://192.168.137.178:30010/"  # e.g., "localhost:9000" or "minio.example.com:9000"
+MINIO_ENDPOINT = "192.168.137.178:30010"  # e.g., "localhost:9000" or "minio.example.com:9000"
 MINIO_ACCESS_KEY = "XPyVklWpBmO5Ub35le77"
 MINIO_SECRET_KEY = "ODlophGJLWIym2I7EgDeJPpuLbid1GmiUGpKd8Sg"
 MINIO_BUCKET = "wildlife-detections"  # Bucket name in MinIO
