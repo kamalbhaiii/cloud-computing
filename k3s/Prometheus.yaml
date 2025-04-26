@@ -1,8 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: prometheus
-  namespace: default
+  name: prometheus-deployment
+  labels:
+    app: prometheus
 spec:
   replicas: 1
   selector:
@@ -16,39 +17,25 @@ spec:
       nodeName: worker-node-3
       containers:
       - name: prometheus
-        image: prom/prometheus:v2.45.0
-        args:
-        - "--config.file=/etc/prometheus/prometheus.yml"
-        - "--storage.tsdb.path=/prometheus"
+        image: prom/prometheus
         ports:
         - containerPort: 9090
         volumeMounts:
-        - name: prometheus-config
-          mountPath: /etc/prometheus
-        - name: prometheus-data
-          mountPath: /prometheus
+        - name: config-volume
+          mountPath: /etc/prometheus/
       volumes:
-      - name: prometheus-config
+      - name: config-volume
         configMap:
           name: prometheus-config
-      - name: prometheus-data
-        emptyDir: {}
-      serviceAccountName: prometheus
-
-
 ---
-
 apiVersion: v1
 kind: Service
 metadata:
-  name: prometheus
-  namespace: default
+  name: prometheus-service
 spec:
+  type: NodePort
+  ports:
+    - port: 9090
+      nodePort: 30030
   selector:
     app: prometheus
-  ports:
-  - protocol: TCP
-    port: 80
-    targetPort: 9090
-    nodePort: 30030
-  type: NodePort

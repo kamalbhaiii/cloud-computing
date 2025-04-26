@@ -2,60 +2,22 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: prometheus-config
-  namespace: default
 data:
   prometheus.yml: |
     global:
       scrape_interval: 15s
+
     scrape_configs:
+      - job_name: 'kubernetes'
+        kubernetes_sd_configs:
+          - role: node
+        relabel_configs:
+          - action: labelmap
+            regex: __meta_kubernetes_node_label_(.+)
+
       - job_name: 'kubernetes-pods'
         kubernetes_sd_configs:
-        - role: pod
-          namespaces:
-            names:
-            - default
-        relabel_configs:
-        - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
-          action: keep
-          regex: true
-        - source_labels: [__meta_kubernetes_pod_label_app]
-          action: replace
-          target_label: app
-      - job_name: 'kubernetes-apiserver'
-        scheme: https
-        tls_config:
-          insecure_skip_verify: true
-        kubernetes_sd_configs:
-        - role: endpoints
-          namespaces:
-            names:
-            - default
-        relabel_configs:
-        - source_labels: [__meta_kubernetes_service_name]
-          action: keep
-          regex: kubernetes
-        - source_labels: [__meta_kubernetes_endpoint_port_name]
-          action: keep
-          regex: https
-        authorization:
-          credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-      - job_name: 'kubelet'
-        scheme: https
-        tls_config:
-          insecure_skip_verify: true
-        kubernetes_sd_configs:
-        - role: node
-        relabel_configs:
-        - action: labelmap
-          regex: __meta_kubernetes_node_label_(.+)
-        authorization:
-          credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
-      - job_name: 'kube-state-metrics'
-        kubernetes_sd_configs:
-        - role: pod
-          namespaces:
-            names:
-            - default
-          selectors:
           - role: pod
-            label: "app=kube-state-metrics"
+        relabel_configs:
+          - action: labelmap
+            regex: __meta_kubernetes_pod_label_(.+)
