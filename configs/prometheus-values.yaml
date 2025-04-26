@@ -5,7 +5,7 @@ server:
   tolerations: []
   service:
     type: NodePort
-    nodePort: 30300
+    nodePort: 30030
 alertmanager:
   enabled: false
 pushgateway:
