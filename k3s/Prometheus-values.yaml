@@ -1,0 +1,9 @@
+server:
+  nodeSelector:
+    kubernetes.io/hostname: worker-node-3
+  affinity: {}
+  tolerations: []
+alertmanager:
+  enabled: false
+pushgateway:
+  enabled: false
