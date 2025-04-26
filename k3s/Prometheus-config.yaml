@@ -26,6 +26,10 @@ data:
       relabel_configs:
       - action: labelmap
         regex: __meta_kubernetes_node_label_(.+)
+      static_configs:
+      - targets:
+        - 192.168.137.76:10250
+        - 192.168.137.193:10250
 
     - job_name: 'kubernetes-pods'
       kubernetes_sd_configs:
