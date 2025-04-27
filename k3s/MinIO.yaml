@@ -12,7 +12,7 @@ spec:
       labels:
         app: minio
     spec:
-      nodeName: worker-node-2
+      nodeName: worker-node-5
       containers:
       - name: minio
         image: quay.io/minio/minio:latest
