@@ -9,8 +9,9 @@ spec:
   accessModes:
     - ReadWriteOnce
   storageClassName: ""
+  persistentVolumeReclaimPolicy: Retain
   hostPath:
-    path: /data/mariadb
+    path: /mnt/data/mariadb
 
 ---
 
@@ -18,11 +19,25 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: mariadb-pvc
-  namespace: default 
 spec:
+  storageClassName: ""
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 1Gi
-  storageClassName: ""
+
+--- 
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb
+spec:
+  ports:
+  - port: 3306
+    targetPort: 3306
+    nodePort: 30050
+  selector:
+    app: mariadb
+  clusterIP: NodePort
