@@ -2,22 +2,66 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: mariadb-config
+  namespace: default
 data:
   my.cnf: |
     [mysqld]
+    user=mysql
+    port=3306
     bind-address=0.0.0.0
-    default_storage_engine=InnoDB
-    innodb_file_per_table=1
-    max_connections=1000
+    datadir=/var/lib/mysql
+    skip-host-cache
+    skip-name-resolve
+---
 
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mariadb-pv
+  namespace: default
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/maria-data"
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - worker-node-2
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mariadb-pvc
+  namespace: default
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  selector:
+    matchLabels:
+      type: local
 ---
 
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
   name: mariadb
+  namespace: default
 spec:
-  serviceName: mariadb
   replicas: 1
   selector:
     matchLabels:
@@ -27,45 +71,42 @@ spec:
       labels:
         app: mariadb
     spec:
-      nodeName: worker-node-2
+      nodeSelector:
+        kubernetes.io/hostname: worker-node-2
       containers:
       - name: mariadb
         image: mariadb:latest
-        ports:
-        - containerPort: 3306
-          name: mysql
         env:
         - name: MYSQL_ROOT_PASSWORD
-          value: admin
+          value: admin 
+        ports:
+        - containerPort: 3306
         volumeMounts:
-        - name: data
-          mountPath: /var/lib/mysql
-        - name: config
-          mountPath: /etc/mysql/conf.d
+        - name: mariadb-storage
+          mountPath: "/var/lib/mysql"
+        - name: mariadb-config
+          mountPath: "/etc/mysql/my.cnf"
+          subPath: my.cnf
       volumes:
-      - name: config
+      - name: mariadb-storage
+        persistentVolumeClaim:
+          claimName: mariadb-pvc
+      - name: mariadb-config
         configMap:
           name: mariadb-config
-  volumeClaimTemplates:
-  - metadata:
-      name: mariadb-pvc
-    spec:
-      accessModes: ["ReadWriteOnce"]
-      resources:
-        requests:
-          storage: 1Gi
-
 ---
 
 apiVersion: v1
 kind: Service
 metadata:
   name: mariadb-service
+  namespace: default
 spec:
-  ports:
-  - port: 3306
-    targetPort: 3306
-    nodePort: 30050
   selector:
     app: mariadb
+  ports:
+  - protocol: TCP
+    port: 3306
+    targetPort: 3306
+    nodePort: 30050
   type: NodePort
