@@ -53,3 +53,18 @@ spec:
       resources:
         requests:
           storage: 10Gi
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb
+spec:
+  ports:
+  - port: 3306
+    targetPort: 3306
+    nodePort: 30050
+  selector:
+    app: mariadb
+  clusterIP: NodePort
