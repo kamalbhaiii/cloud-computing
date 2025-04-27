@@ -1,6 +1,6 @@
 server:
   nodeSelector:
-    node-type: monitoring 
+    prometheus-node: true 
   affinity: {}
   tolerations: []
   service:
