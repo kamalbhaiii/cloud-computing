@@ -1,25 +1,15 @@
-prometheus:
-  prometheusSpec:
-    replicas: 1
-    nodeSelector:
-      prometheus-node: "true"
-    affinity:
-      podAntiAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchExpressions:
-                - key: app.kubernetes.io/name
-                  operator: In
-                  values:
-                    - prometheus
-            topologyKey: "kubernetes.io/hostname"
-    resources:
-      requests:
-        memory: "256Mi"
-        cpu: "200m"
-      limits:
-        memory: "512Mi"
-        cpu: "500m"
+server:
+  enabled: true
+  service:
+    type: NodePort
+    nodePort: 30030
+    port: 9090
+  persistentVolume:
+    enabled: true
+    size: 8Gi
+
+alertmanager:
+  enabled: false
 
 kubeStateMetrics:
   enabled: true
@@ -27,8 +17,5 @@ kubeStateMetrics:
 nodeExporter:
   enabled: true
 
-grafana:
-  enabled: false
-
-alertmanager:
+pushgateway:
   enabled: false
