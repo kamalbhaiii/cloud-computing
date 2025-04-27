@@ -1,13 +1,34 @@
-server:
-  nodeSelector:
-    kubernetes.io/hostname: worker-node-3
-  affinity: {}
-  tolerations: []
-  service:
-    type: NodePort
-    nodePort: 30030
-  replicaCount: 1
-alertmanager:
+prometheus:
+  prometheusSpec:
+    replicas: 1
+    nodeSelector:
+      prometheus-node: "true"
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/name
+                  operator: In
+                  values:
+                    - prometheus
+            topologyKey: "kubernetes.io/hostname"
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "200m"
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+
+kubeStateMetrics:
+  enabled: true
+
+nodeExporter:
+  enabled: true
+
+grafana:
   enabled: false
-pushgateway:
+
+alertmanager:
   enabled: false
