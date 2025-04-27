@@ -3,31 +3,40 @@ kind: Deployment
 metadata:
   name: mariadb
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app: mariadb
-  replicas: 1
   template:
     metadata:
       labels:
         app: mariadb
     spec:
-      nodeName: worker-node-2
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - worker-node-2
       containers:
       - name: mariadb
-        image: mariadb:11.3
-        ports:
-        - containerPort: 3306
+        image: mariadb:11.1
         env:
         - name: MYSQL_ROOT_PASSWORD
           value: "admin"
+        ports:
+        - containerPort: 3306
         volumeMounts:
         - name: mariadb-storage
           mountPath: /var/lib/mysql
       volumes:
       - name: mariadb-storage
         persistentVolumeClaim:
-          claimName: mariadb-pvc
+          claimName: maria-pvc
+
 
 ---
 apiVersion: v1
