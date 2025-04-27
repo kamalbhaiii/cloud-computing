@@ -1,57 +1,12 @@
-prometheus:
-  prometheusSpec:
-    replicas: 1
-    nodeSelector:
-      node-type: monitoring 
-    service:
-      type: NodePort
-      nodePort: 30030
-    storageSpec:
-      volumeClaimTemplate:
-        spec:
-          storageClassName: longhorn
-          accessModes: ["ReadWriteOnce"]
-          resources:
-            requests:
-              storage: 10Gi
-    resources:
-      requests:
-        memory: "200Mi"
-        cpu: "100m"
-      limits:
-        memory: "400Mi"
-        cpu: "200m"
-    serviceMonitorSelector:
-      matchLabels:
-        prometheus: k3s-monitoring
-    retention: 7d
-
-
+server:
+  nodeSelector:
+    node-type: monitoring 
+  affinity: {}
+  tolerations: []
+  service:
+    type: NodePort
+    nodePort: 30030
 alertmanager:
   enabled: false
-kubeStateMetrics:
-  enabled: true
-  serviceMonitor:
-    enabled: true
-    additionalLabels:
-      prometheus: k3s-monitoring
-nodeExporter:
-  enabled: true
-  serviceMonitor:
-    enabled: true
-    additionalLabels:
-      prometheus: k3s-monitoring
 pushgateway:
   enabled: false
-
-
-grafana:
-  enabled: false
-
-
-prometheusOperator:
-  kubeletService:
-    enabled: false
-  serviceMonitor:
-    additionalLabels:
-      prometheus: k3s-monitoring
