@@ -11,7 +11,7 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   storageClassName: ""
   local:
-    path: /mnt/maria-data
+    path: /var/lib/mysql
   nodeAffinity:
     required:
       nodeSelectorTerms:
