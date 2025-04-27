@@ -67,4 +67,4 @@ spec:
     nodePort: 30050
   selector:
     app: mariadb
-  clusterIP: NodePort
+  type: NodePort
