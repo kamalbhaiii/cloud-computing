@@ -3,3 +3,4 @@
 30020: MinIO (Console)
 30030: Prometheus
 30040: Grafana
+30050: Maria
