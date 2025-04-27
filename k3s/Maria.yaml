@@ -27,6 +27,7 @@ spec:
       labels:
         app: mariadb
     spec:
+      nodeName: worker-node-2
       containers:
       - name: mariadb
         image: mariadb:latest
