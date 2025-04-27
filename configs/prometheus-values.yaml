@@ -1,16 +1,16 @@
 server:
   nodeSelector:
     node-type: monitoring
-  affinity: {}
-  tolerations:
-    - key: "node-role.kubernetes.io/control-plane"
-      operator: "Exists"
-      effect: "NoSchedule"
-      tolerationSeconds: null
-    - key: "node-role.kubernetes.io/master"
-      operator: "Exists"
-      effect: "NoSchedule"
-      tolerationSeconds: null
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: node-type
+            operator: In
+            values:
+            - monitoring
+  tolerations: []
   service:
     type: NodePort
     nodePort: 30030
