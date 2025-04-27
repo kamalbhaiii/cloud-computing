@@ -1,8 +1,16 @@
 server:
   nodeSelector:
-    prometheus-node: true 
+    node-type: monitoring
   affinity: {}
-  tolerations: []
+  tolerations:
+    - key: "node-role.kubernetes.io/control-plane"
+      operator: "Exists"
+      effect: "NoSchedule"
+      tolerationSeconds: null
+    - key: "node-role.kubernetes.io/master"
+      operator: "Exists"
+      effect: "NoSchedule"
+      tolerationSeconds: null
   service:
     type: NodePort
     nodePort: 30030
