@@ -10,8 +10,6 @@ spec:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
   storageClassName: ""
-  local:
-    path: /var/lib/mysql
   nodeAffinity:
     required:
       nodeSelectorTerms:

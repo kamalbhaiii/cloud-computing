@@ -10,6 +10,8 @@ spec:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
   storageClassName: ""
+  local:
+    path: /mnt/minio-data
   nodeAffinity:
     required:
       nodeSelectorTerms:
