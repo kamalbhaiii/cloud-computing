@@ -6,6 +6,7 @@ server:
   service:
     type: NodePort
     nodePort: 30030
+  replicaCount: 1
 alertmanager:
   enabled: false
 pushgateway:
