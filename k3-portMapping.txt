@@ -5,3 +5,5 @@
 30040: Grafana
 30050: Maria
 30060: Adminer (Maria Dashboard)
+30070: Server
+30080: Frontend
