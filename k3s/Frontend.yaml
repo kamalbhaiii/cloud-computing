@@ -13,7 +13,7 @@ spec:
       labels:
         app: frontend
     spec:
-      nodeName: worker-node-5
+      nodeName: worker-node-4
       containers:
       - name: frontend
         image: kamalbhaiii/cloud-computing-frontend:armv7-1.0
