@@ -12,7 +12,7 @@ from datetime import datetime
 API_URL = "https://serverless.roboflow.com"
 API_KEY = "uUiAY4ufKNxPGS9jwXP6"
 MODEL_ID = "datasets-zjnxi/3"
-CONF_THRESHOLD = 0.5
+CONF_THRESHOLD = 0.7
 TEMP_IMAGE_PATH = "temp_frame.jpg"
 
 # ====== MinIO CONFIG ======
