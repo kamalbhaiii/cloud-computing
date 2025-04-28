@@ -1,14 +1,14 @@
 # Maven target directory
 */target/
-*/
-*/# Git
+
+# Git
 */.git
 */.gitignore
 
 */# IDE settings
 */.idea/
 */.vscode/
-*/
+
 # OS files
 */.DS_Store
 */Thumbs.db
