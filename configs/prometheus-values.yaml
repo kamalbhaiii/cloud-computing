@@ -1,20 +1,11 @@
 server:
-  nodeSelector:
-    node-type: monitoring
-  affinity:
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-        - matchExpressions:
-          - key: node-type
-            operator: In
-            values:
-            - monitoring
-  tolerations: []
+  nodeName: master-node
   service:
     type: NodePort
     nodePort: 30030
 alertmanager:
   enabled: false
+  nodeName: master-node
 pushgateway:
   enabled: false
+  nodeName: masternode
