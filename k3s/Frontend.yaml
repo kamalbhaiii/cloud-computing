@@ -17,6 +17,7 @@ spec:
       containers:
       - name: frontend
         image: kamalbhaiii/cloud-computing-frontend:armv7-1.0
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
 ---
