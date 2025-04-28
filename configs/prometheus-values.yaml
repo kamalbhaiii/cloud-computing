@@ -1,11 +1,16 @@
 server:
-  nodeName: master-node
+  nodeSelector:
+    kubernetes.io/hostname: master-node
   service:
     type: NodePort
     nodePort: 30030
+
 alertmanager:
-  enabled: false
-  nodeName: master-node
+  enabled: true
+  nodeSelector:
+    kubernetes.io/hostname: master-node
+
 pushgateway:
-  enabled: false
-  nodeName: masternode
+  enabled: true
+  nodeSelector:
+    kubernetes.io/hostname: master-node
