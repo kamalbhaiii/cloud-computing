@@ -15,6 +15,7 @@ spec:
       labels:
         app: adminer
     spec:
+      nodeName: worker-node-5
       containers:
       - name: adminer
         image: adminer:4.8.1
