@@ -4,15 +4,15 @@
 */# Git
 */.git
 */.gitignore
-*/
+
 */# IDE settings
 */.idea/
 */.vscode/
 */
-*/# OS files
+# OS files
 */.DS_Store
 */Thumbs.db
-*/
+
 # Docker files themselves
 */Dockerfile.*
 */docker-compose.yml
