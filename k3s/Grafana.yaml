@@ -13,7 +13,7 @@ spec:
       labels:
         app: grafana
     spec:
-      nodeName: worker-node-2
+      nodeName: master-node
       containers:
       - name: grafana
         image: grafana/grafana:9.5.2
