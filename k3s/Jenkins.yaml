@@ -64,12 +64,6 @@ spec:
         volumeMounts:
         - name: jenkins-storage
           mountPath: "/var/jenkins_home"
-          requests:
-            cpu: "500m"
-            memory: "1Gi"
-          limits:
-            cpu: "1000m"
-            memory: "2Gi"
       volumes:
       - name: jenkins-storage
         persistentVolumeClaim:
