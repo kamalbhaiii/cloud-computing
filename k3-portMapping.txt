@@ -1,4 +1,4 @@
-30000: Frontend
+30000: Jenkins
 30010: MinIO (API)
 30020: MinIO (Console)
 30030: Prometheus
@@ -6,4 +6,6 @@
 30050: Maria
 30060: Adminer (Maria Dashboard)
 30070: Server
-30080: Frontend
+30080: 
+30090: 
+40000: Frontend
