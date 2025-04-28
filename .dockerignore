@@ -16,3 +16,6 @@
 # Docker files themselves
 */Dockerfile.*
 */docker-compose.yml
+
+# Frontend
+*/node_modules
