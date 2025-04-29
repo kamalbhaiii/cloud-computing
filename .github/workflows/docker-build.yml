@@ -5,6 +5,7 @@ on:
     paths:
       - 'server/**'
       - 'frontend/**'
+      - 'k3s/**'
 
 jobs:
   build:
@@ -26,14 +27,17 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-      - name: Detect changed directory
+      - name: Detect changed directories
         id: detect_changes
         run: |
-          echo "changed_dir=none" >> $GITHUB_ENV
+          echo "server_changed=false" >> $GITHUB_ENV
+          echo "frontend_changed=false" >> $GITHUB_ENV
+
           if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '^server/'; then
-            echo "changed_dir=server" >> $GITHUB_ENV
-          elif git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '^frontend/'; then
-            echo "changed_dir=frontend" >> $GITHUB_ENV
+            echo "server_changed=true" >> $GITHUB_ENV
+          fi
+          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '^frontend/'; then
+            echo "frontend_changed=true" >> $GITHUB_ENV
           fi
 
       - name: Generate image tag
@@ -42,7 +46,7 @@ jobs:
           echo "IMAGE_TAG=$TAG" >> $GITHUB_ENV
 
       - name: Build & Push Server Image (ARMv7)
-        if: env.changed_dir == 'server'
+        if: env.server_changed == 'true'
         run: |
           docker buildx build \
             --platform linux/arm/v7 \
@@ -51,7 +55,7 @@ jobs:
             --push
 
       - name: Build & Push Frontend Image (ARMv7)
-        if: env.changed_dir == 'frontend'
+        if: env.frontend_changed == 'true'
         run: |
           docker buildx build \
             --platform linux/arm/v7 \
@@ -59,35 +63,32 @@ jobs:
             -f ./Dockerfile.frontend . \
             --push
 
-      - name: Update image reference in k3s YAML
-        if: env.changed_dir != 'none'
+      - name: Update image references in k3s YAML
+        if: env.server_changed == 'true' || env.frontend_changed == 'true'
         run: |
-          if [ "$changed_dir" == "server" ]; then
+          if [ "$server_changed" = "true" ]; then
             sed -i "s|kamalbhaiii/cloud-computing-server:.*|kamalbhaiii/cloud-computing-server:${IMAGE_TAG}|g" k3s/Server.yaml
-          elif [ "$changed_dir" == "frontend" ]; then
+          fi
+          if [ "$frontend_changed" = "true" ]; then
             sed -i "s|kamalbhaiii/cloud-computing-frontend:.*|kamalbhaiii/cloud-computing-frontend:${IMAGE_TAG}|g" k3s/Frontend.yaml
           fi
 
       - name: Configure Git for GitHub push
-        run: |
-            git config --global user.name "github-actions"
-            git config --global user.email "github-actions@github.com"
-            git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
-
-
-      - name: Commit updated YAML
-        if: env.changed_dir != 'none'
+        if: env.server_changed == 'true' || env.frontend_changed == 'true'
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+
+      - name: Commit updated YAML
+        if: env.server_changed == 'true' || env.frontend_changed == 'true'
+        run: |
           git add k3s/*.yaml
-          git commit -m "Update $changed_dir image tag to $IMAGE_TAG"
+          git commit -m "Update image tags to $IMAGE_TAG"
           git push
 
       - name: Trigger Jenkins Job
-        if: env.changed_dir != 'none'
         run: |
           curl -X POST "http://192.168.137.178:30100/job/cloud-computing/buildWithParameters" \
           --user "admin:802821b10d574a648c5dfcea971257a2" \
           --data token=cloud_computing_deploy_kamalbhaiii
-
