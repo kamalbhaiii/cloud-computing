@@ -45,7 +45,7 @@ jobs:
           docker buildx build \
             --platform linux/arm/v7 \
             -t kamalbhaiii/cloud-computing-server:${{ env.IMAGE_TAG }} \
-            -f ./server/Dockerfile ./server \
+            -f ./Dockerfile.server . \
             --push
 
       - name: Build & Push Frontend Image (ARMv7)
@@ -54,7 +54,7 @@ jobs:
           docker buildx build \
             --platform linux/arm/v7 \
             -t kamalbhaiii/cloud-computing-frontend:${{ env.IMAGE_TAG }} \
-            -f ./frontend/Dockerfile ./frontend \
+            -f ./Dockerfile.frontend . \
             --push
 
       - name: Update image reference in k3s YAML
