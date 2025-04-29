@@ -83,3 +83,11 @@ jobs:
           git add k3s/*.yaml
           git commit -m "Update $changed_dir image tag to $IMAGE_TAG"
           git push
+
+      - name: Trigger Jenkins Job
+        if: env.changed_dir != 'none'
+        run: |
+          curl -X POST "http://192.168.137.178:30100/job/cloud-computing/buildWithParameters" \
+          --user "admin:802821b10d574a648c5dfcea971257a2" \
+          --data token=cloud_computing_deploy_kamalbhaiii
+
