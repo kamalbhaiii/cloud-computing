@@ -26,7 +26,7 @@ function App() {
         </p>
       </div>
       <p className="read-the-docs">
-        Checking the github actions automated Image creation by Kamal
+        Checking the github actions automated Image creation by Kamalbhaiii
       </p>
     </>
   )
