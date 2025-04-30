@@ -12,10 +12,11 @@ COPY server/src ./src
 RUN chmod +x mvnw && \
     sed -i 's/\r$//' mvnw
 
-# Debug: Print Java version and Maven version, then run build with verbose output
+# Debug: Print Java and Maven versions, run build with verbose output, and check target directory
 RUN java -version && \
     ./mvnw --version && \
-    ./mvnw clean package -DskipTests -X || true
+    ./mvnw clean package -DskipTests -X && \
+    ls -l /app/target || echo "Target directory not found"
 
 FROM eclipse-temurin:17-jre
 
