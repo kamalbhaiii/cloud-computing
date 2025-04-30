@@ -63,7 +63,7 @@ Notification Bot (for alerts)
 5.Notification:
     If a specific detection (e.g., "Dog detected") occurs, the Notification Bot sends an alert.
     
-![App Screenshot]("https://res.cloudinary.com/di8qb3wge/image/upload/v1746005704/CC_image_n012qc.png")
+![App Screenshot]("../static/image1.png")
 
 
    
