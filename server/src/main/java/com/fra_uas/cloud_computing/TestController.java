@@ -7,7 +7,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class TestController {
 
     @GetMapping("/test")
-    public String test() {
-        return "Server is running.";
+    public Map<String, String> greet() {
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Hello from Spring Boot!");
+        return response;
     }
 }
