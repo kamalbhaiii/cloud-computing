@@ -2,20 +2,28 @@ FROM maven:3.8.8-eclipse-temurin-17 AS builder
 
 WORKDIR /app
 
-COPY server/pom.xml ./
-COPY server/mvnw ./
-COPY server/mvnw.cmd ./
+COPY server/pom.xml .
+COPY server/mvnw .
+COPY server/mvnw.cmd .
 COPY server/.mvn .mvn
 COPY server/src ./src
 
+# Ensure mvnw is executable and fix line endings if needed
+RUN chmod +x mvnw && \
+    sed -i 's/\r$//' mvnw
+
+# Build the application
 RUN ./mvnw clean package -DskipTests
 
-FROM arm32v7/eclipse-temurin:17-jre
+FROM eclipse-temurin:17-jre
 
 WORKDIR /app
 
+# Copy the jar from the builder image
 COPY --from=builder /app/target/*.jar app.jar
 
+# Expose port 5000
 EXPOSE 5000
 
+# Run the app
 ENTRYPOINT ["java", "-jar", "app.jar"]
