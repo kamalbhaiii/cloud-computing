@@ -9,7 +9,7 @@ public class TestController {
     @GetMapping("/test")
     public Map<String, String> greet() {
         Map<String, String> response = new HashMap<>();
-        response.put("message", "Hello from Spring Boot!");
+        response.put("message", "Hey from Spring Boot!");
         return response;
     }
 }
