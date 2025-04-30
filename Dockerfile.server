@@ -8,12 +8,14 @@ COPY server/mvnw.cmd .
 COPY server/.mvn .mvn
 COPY server/src ./src
 
-# Ensure mvnw is executable and fix line endings if needed
+# Ensure mvnw is executable and fix line endings
 RUN chmod +x mvnw && \
     sed -i 's/\r$//' mvnw
 
-# Build the application
-RUN ./mvnw clean package -DskipTests
+# Debug: Print Java version and Maven version, then run build with verbose output
+RUN java -version && \
+    ./mvnw --version && \
+    ./mvnw clean package -DskipTests -X || true
 
 FROM eclipse-temurin:17-jre
 
