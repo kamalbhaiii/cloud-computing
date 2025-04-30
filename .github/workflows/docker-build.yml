@@ -2,6 +2,8 @@ name: Build and Deploy Docker Images for ARM
 
 on:
   push:
+    branches:
+      - master
     paths:
       - 'server/**'
       - 'frontend/**'
@@ -86,9 +88,3 @@ jobs:
           git add k3s/*.yaml
           git commit -m "Update image tags to $IMAGE_TAG"
           git push
-
-      - name: Trigger Jenkins Job
-        run: |
-          curl -X POST "http://192.168.137.178:30100/job/cloud-computing/buildWithParameters" \
-          --user "admin:802821b10d574a648c5dfcea971257a2" \
-          --data token=cloud_computing_deploy_kamalbhaiii
