@@ -12,8 +12,8 @@ pipeline {
                 echo "Checking out latest changes on master branch..."
                 dir("${PROJECT_DIR}") {
                     sh '''
-                    sudo git checkout master
-                    sudo git pull origin master
+                    git checkout master
+                    git pull origin master
                     '''
                 }
             }
