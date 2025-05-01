@@ -44,7 +44,7 @@ metadata:
   name: jenkins
   namespace: default
 spec:
-  replicas: 1  # Must be 1 due to hostPath and RWO
+  replicas: 1
   selector:
     matchLabels:
       app: jenkins
@@ -55,6 +55,9 @@ spec:
     spec:
       nodeSelector:
         kubernetes.io/hostname: master-node
+      securityContext:
+        runAsUser: 1001
+        fsGroup: 1001       
       containers:
       - name: jenkins
         image: jenkins/jenkins:lts
