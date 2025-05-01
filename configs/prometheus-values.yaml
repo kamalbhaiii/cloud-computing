@@ -1,4 +1,5 @@
 server:
+  replicas: 2
   nodeSelector:
     kubernetes.io/hostname: master-node
   service:
@@ -7,15 +8,18 @@ server:
 
 alertmanager:
   enabled: true
+  replicas: 2
   nodeSelector:
     kubernetes.io/hostname: master-node
 
 pushgateway:
   enabled: true
+  replicas: 2
   nodeSelector:
     kubernetes.io/hostname: master-node
 
 kubestatemetrics:
   enabled: true
+  replicas: 2
   nodeSelector:
     kubernetes.io/hostname: master-node
