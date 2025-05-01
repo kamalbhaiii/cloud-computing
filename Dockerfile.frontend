@@ -1,4 +1,4 @@
-FROM node:23-alpine AS builder
+FROM arm32v7/node:23 AS builder
 
 WORKDIR /app
 
@@ -10,7 +10,7 @@ COPY frontend/ /app/
 
 RUN npm run build
 
-FROM nginx:alpine
+FROM arm32v7/nginx
 
 COPY --from=builder /app/dist /usr/share/nginx/html
 
