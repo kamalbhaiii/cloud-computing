@@ -1,4 +1,4 @@
-FROM arm32v7/node:23-alpine AS builder
+FROM arm32v7/node AS builder
 
 WORKDIR /app
 
