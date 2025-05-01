@@ -44,7 +44,7 @@ metadata:
   name: jenkins
   namespace: default
 spec:
-  replicas: 2
+  replicas: 1  # Must be 1 due to hostPath and RWO
   selector:
     matchLabels:
       app: jenkins
@@ -64,10 +64,20 @@ spec:
         volumeMounts:
         - name: jenkins-storage
           mountPath: "/var/jenkins_home"
+        - name: docker-sock
+          mountPath: "/var/run/docker.sock"
+        - name: cloud-project
+          mountPath: "/home/ubuntu/cloud-computing"
       volumes:
       - name: jenkins-storage
         persistentVolumeClaim:
           claimName: jenkins-pvc
+      - name: docker-sock
+        hostPath:
+          path: /var/run/docker.sock
+      - name: cloud-project
+        hostPath:
+          path: /home/ubuntu/cloud-computing
 ---
 apiVersion: v1
 kind: Service
@@ -88,4 +98,4 @@ spec:
     protocol: TCP
     port: 50000
     targetPort: 50000
-    nodePort: 30101 
+    nodePort: 30101
