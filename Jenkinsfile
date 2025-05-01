@@ -12,6 +12,8 @@ pipeline {
                 echo "Checking out latest changes on master branch..."
                 dir("${PROJECT_DIR}") {
                     sh '''
+                    whoami
+                    ls -la
                     git checkout master
                     git pull origin master
                     '''
@@ -24,6 +26,7 @@ pipeline {
                 echo "Applying k3s manifests..."
                 dir("${PROJECT_DIR}/k3s") {
                     sh '''
+                    ls -la
                     kubectl apply -f .
                     '''
                 }
