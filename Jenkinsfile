@@ -2,6 +2,7 @@ pipeline {
     agent any
 
     environment {
+        GIT_DISCOVERY_ACROSS_FILESYSTEM = '1'
         PROJECT_DIR = '/home/ubuntu/cloud-computing'
     }
 
