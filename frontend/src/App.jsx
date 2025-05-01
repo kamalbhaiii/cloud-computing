@@ -4,7 +4,7 @@ const App = () => {
   return (
     <div className='h-screen w-full'>
       <h3 className='text-center'>
-        Frontend Test
+        Frontend
       </h3>
     </div>
   )
