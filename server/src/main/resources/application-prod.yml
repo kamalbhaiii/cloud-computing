@@ -7,9 +7,9 @@ spring:
   application:
     name: Backend
   datasource:
-    url: jdbc:mysql://10.20.30.3:3306/cloud-ai
-    username: root
-    password: cloud-ai
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
   jpa:
     show-sql: true
     hibernate:
@@ -18,5 +18,5 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
 server:
-  address: 10.20.30.4
-  port: 9090
+  address: ${SERVER_ADDRESS}
+  port: ${SERVER_PORT}
