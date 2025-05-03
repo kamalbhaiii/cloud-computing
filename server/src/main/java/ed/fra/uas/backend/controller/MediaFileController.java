@@ -88,7 +88,7 @@ public class MediaFileController {
      * @param id the UUID of the media file to delete
      * @return a ResponseEntity containing a ResponseMessage indicating the deletion status
      */
-    @DeleteMapping
+    @DeleteMapping("/{id}")
     public ResponseEntity<ResponseMessage> delete(@PathVariable UUID id) {
         log.info("Deleting media file with ID: {}", id);
         mediaFileService.delete(id);
