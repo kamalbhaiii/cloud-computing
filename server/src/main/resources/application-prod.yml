@@ -7,9 +7,9 @@ spring:
   application:
     name: Backend
   datasource:
-      url: jdbc:mysql://10.20.30.3:3306/cloud-ai
-      username: root
-      password: cloud-ai
+    url: jdbc:mysql://10.20.30.3:3306/cloud-ai
+    username: root
+    password: cloud-ai
   jpa:
     show-sql: true
     hibernate:
