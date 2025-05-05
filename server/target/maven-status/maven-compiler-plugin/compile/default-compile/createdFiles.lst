@@ -1,0 +1,9 @@
+ed\fra\uas\backend\service\impl\MediaFileServiceImpl.class
+ed\fra\uas\backend\BackendApplication.class
+ed\fra\uas\backend\model\MediaFile$MediaFileBuilder.class
+ed\fra\uas\backend\controller\MediaFileController.class
+ed\fra\uas\backend\common\RestTemplateConfig.class
+ed\fra\uas\backend\model\MediaFile.class
+ed\fra\uas\backend\common\ResponseMessage.class
+ed\fra\uas\backend\service\MediaFileService.class
+ed\fra\uas\backend\repository\MediaFileRepository.class
