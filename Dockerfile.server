@@ -1,32 +1,26 @@
-FROM maven:3.8.8-eclipse-temurin-17 AS builder
-
-WORKDIR /app
-
+FROM arm32v7/maven:3.9.9-eclipse-temurin-11 AS builder
+WORKDIR /build
 COPY server/pom.xml .
-COPY server/mvnw .
-COPY server/mvnw.cmd .
-COPY server/.mvn .mvn
-COPY server/src ./src
+COPY server/src ./src/
+COPY server/mvnw ./
+COPY server/.mvn/ .mvn/
+RUN chmod +x mvnw
 
-# Ensure mvnw is executable and fix line endings
-RUN chmod +x mvnw && \
-    sed -i 's/\r$//' mvnw
+# RUN ./mvnw dependency:go-offline
+RUN mvn clean package --quiet -DskipTests --batch-mode --fail-fast --no-transfer-progress
 
-# Debug: Print Java and Maven versions, run build with verbose output, and check target directory
-RUN java -version && \
-    ./mvnw --version && \
-    ./mvnw clean package -DskipTests -X && \
-    ls -l /app/target || echo "Target directory not found"
 
 FROM eclipse-temurin:17-jre
-
 WORKDIR /app
+COPY --from=builder /build/target/*.jar app.jar
 
-# Copy the jar from the builder image
-COPY --from=builder /app/target/*.jar app.jar
+ENV SPRING_PROFILE=prod
+ENV DB_HOST=192.168.137.178
+ENV DB_PORT=30050
+ENV DB_NAME=cloud-computing
+ENV DB_USERNAME=root
+ENV DB_PASSWORD=admin
+ENV SERVER_ADDRESS=192.168.137.178
+ENV SERVER_PORT=30070
 
-# Expose port 5000
-EXPOSE 5000
-
-# Run the app
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Dspring.profiles.active=${SPRING_PROFILE}", "-jar", "app.jar"]

@@ -3,3 +3,4 @@ venv
 token.*
 *-ignore.*
 *ignore*
+server/target/

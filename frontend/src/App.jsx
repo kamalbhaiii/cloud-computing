@@ -4,7 +4,7 @@ const App = () => {
   return (
     <div className='h-screen w-full'>
       <h3 className='text-center'>
-        Frontend
+        Frontend- added tailwindcss - test-2
       </h3>
     </div>
   )
