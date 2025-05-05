@@ -6,6 +6,8 @@ on:
       - server-build
     paths:
       - 'server/**'
+      - 'Dockerfile.server'
+      - '.github/workflows/server-build.yml'
 
 jobs:
   build-and-deploy:
