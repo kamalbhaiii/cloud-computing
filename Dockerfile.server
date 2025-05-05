@@ -2,9 +2,10 @@ FROM eclipse-temurin:17-jdk AS builder
 WORKDIR /build
 COPY server/pom.xml .
 COPY server/src ./src/
+COPY server/mvnw ./
 
-RUN ./server/mvnw dependency:go-offline
-RUN ./server/mvnw clean package --quiet -DskipTests --batch-mode --fail-fast --no-transfer-progress
+RUN ./mvnw dependency:go-offline
+RUN ./mvnw clean package --quiet -DskipTests --batch-mode --fail-fast --no-transfer-progress
 
 
 FROM eclipse-temurin:17-jre
