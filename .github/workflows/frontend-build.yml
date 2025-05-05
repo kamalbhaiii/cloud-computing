@@ -3,7 +3,7 @@ name: Build and Deploy Frontend Docker Image
 on:
   push:
     branches:
-      - server-build
+      - master
     paths:
       - 'frontend/**'
 
