@@ -28,3 +28,4 @@ ENV SERVER_ADDRESS=192.168.137.178
 ENV SERVER_PORT=30070
 
 ENTRYPOINT ["java", "-Dspring.profiles.active=${SPRING_PROFILE}", "-jar", "Backend-1.0.0.jar"]
+
