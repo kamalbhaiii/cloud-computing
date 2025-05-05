@@ -66,13 +66,13 @@ jobs:
           file: Dockerfile.server
           platforms: linux/arm/v7
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/cloud-computing-server:${{ steps.generate_tag.outputs.tag }}
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/cloud-computing-server:${{ steps.generate_tag.outputs.tag }}
 
       # Updating Server.yaml with new tag
       - name: Update Server.yaml
         if: steps.check_changes.outputs.changes_detected == 'true'
         run: |
-          sed -i "s|image: kamalbhaiii/cloud-computing-server:.*|image: kamalbhaiii/cloud-computing-server:${{ steps.generate_tag.outputs.tag }}|" k3s/Server.yaml
+          sed -i "s|image: ${{ secrets.DOCKER_HUB_USERNAME }}/cloud-computing-server:.*|image: ${{ secrets.DOCKER_HUB_USERNAME }}/cloud-computing-server:${{ steps.generate_tag.outputs.tag }}|" k3s/Server.yaml
           git config --global user.name 'GitHub Action'
           git config --global user.email 'action@github.com'
           git add k3s/Server.yaml
