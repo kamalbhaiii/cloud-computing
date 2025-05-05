@@ -1,32 +1,27 @@
-FROM maven:3.8.8-eclipse-temurin-17 AS builder
+ARG MVN_VERSION=3.8.5-openjdk-17
+ARG JDK_VERSION=17
+ARG maven_tool_chain_cache
 
-WORKDIR /app
-
+FROM maven:${MVN_VERSION} AS maven_tool_chain_cache
+WORKDIR /build
 COPY server/pom.xml .
-COPY server/mvnw .
-COPY server/mvnw.cmd .
-COPY server/.mvn .mvn
-COPY server/src ./src
+COPY server/src ./src/
 
-# Ensure mvnw is executable and fix line endings
-RUN chmod +x mvnw && \
-    sed -i 's/\r$//' mvnw
+RUN mvn dependency:go-offline
+RUN mvn clean package --quiet -DskipTests --batch-mode --fail-fast --no-transfer-progress
 
-# Debug: Print Java and Maven versions, run build with verbose output, and check target directory
-RUN java -version && \
-    ./mvnw --version && \
-    ./mvnw clean package -DskipTests -X && \
-    ls -l /app/target || echo "Target directory not found"
+FROM openjdk:${JDK_VERSION}-jdk
 
-FROM eclipse-temurin:17-jre
+COPY --from=maven_tool_chain_cache /build/target/ /
 
-WORKDIR /app
+ENV SPRING_PROFILE=prod
+ENV DB_HOST=10.20.30.3
+ENV DB_PORT=3306
+ENV DB_NAME=cloud-ai
+ENV DB_USERNAME=root
+ENV DB_PASSWORD=cloud-ai
+ENV SERVER_ADDRESS=10.20.30.4
+ENV SERVER_PORT=9090
 
-# Copy the jar from the builder image
-COPY --from=builder /app/target/*.jar app.jar
-
-# Expose port 5000
-EXPOSE 5000
-
-# Run the app
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Set the entry point command for the Java application
+ENTRYPOINT ["java", "-Dspring.profiles.active=${SPRING_PROFILE}", "-jar", "Backend-1.0.0.jar"]

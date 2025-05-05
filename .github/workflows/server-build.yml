@@ -1,0 +1,70 @@
+name: Build and Deploy Server Docker Image
+
+on:
+  push:
+    branches:
+      - server-build
+    paths:
+      - 'server/**'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # Checking out the repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Detecting changes in server folder
+      - name: Check for server changes
+        id: check_changes
+        run: |
+          git diff --name-only HEAD^ HEAD | grep '^server/' && echo "changes_detected=true" >> $GITHUB_OUTPUT || echo "changes_detected=false" >> $GITHUB_OUTPUT
+
+      # Setting up QEMU for ARM support
+      - name: Set up QEMU
+        if: steps.check_changes.outputs.changes_detected == 'true'
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm
+
+      # Setting up Docker Buildx for multi-architecture builds
+      - name: Set up Docker Buildx
+        if: steps.check_changes.outputs.changes_detected == 'true'
+        uses: docker/setup-buildx-action@v3
+
+      # Logging in to DockerHub
+      - name: Login to DockerHub
+        if: steps.check_changes.outputs.changes_detected == 'true'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      # Generating timestamp tag
+      - name: Generate timestamp tag
+        if: steps.check_changes.outputs.changes_detected == 'true'
+        id: generate_tag
+        run: echo "tag=$(date +%s)" >> $GITHUB_OUTPUT
+
+      # Building and pushing Docker image for ARMv7
+      - name: Build and push Docker image
+        if: steps.check_changes.outputs.changes_detected == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.server
+          platforms: linux/arm/v7
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/cloud-computing-server:${{ steps.generate_tag.outputs.tag }}
+
+      # Updating Server.yaml with new tag
+      - name: Update Server.yaml
+        if: steps.check_changes.outputs.changes_detected == 'true'
+        run: |
+          sed -i "s|image: ${{ secrets.DOCKERHUB_USERNAME }}/cloud-computing-server:.*|image: ${{ secrets.DOCKERHUB_USERNAME }}/cloud-computing-server:${{ steps.generate_tag.outputs.tag }}|" k3s/Server.yaml
+          git config --global user.name 'GitHub Action'
+          git config --global user.email 'action@github.com'
+          git add k3s/Server.yaml
+          git commit -m "Update Server.yaml with new Docker image tag"
+          git push
