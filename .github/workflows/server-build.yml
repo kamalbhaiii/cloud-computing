@@ -66,8 +66,6 @@ jobs:
           file: Dockerfile.server
           platforms: linux/arm/v7
           push: true
-          build-args: |
-            ARCH=arm32v7
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/cloud-computing-server:${{ steps.generate_tag.outputs.tag }}
 
       # Updating Server.yaml with new tag
