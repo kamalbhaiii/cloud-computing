@@ -1,23 +1,18 @@
-# FROM eclipse-temurin:17-jdk AS builder
-# WORKDIR /build
-# COPY server/pom.xml .
-# COPY server/src ./src/
-# COPY server/mvnw ./
-# COPY server/.mvn/ .mvn/
-# RUN chmod +x mvnw
-
-# # RUN ./mvnw dependency:go-offline
-# RUN ./mvnw clean package --quiet -DskipTests --batch-mode --fail-fast --no-transfer-progress
-
-
-FROM eclipse-temurin:17-jre
-WORKDIR /app
+FROM arm32v7/maven:3.9.9-eclipse-temurin-11 AS builder
+WORKDIR /build
 COPY server/pom.xml .
 COPY server/src ./src/
 COPY server/mvnw ./
 COPY server/.mvn/ .mvn/
 RUN chmod +x mvnw
-COPY server/target/*.jar app.jar
+
+# RUN ./mvnw dependency:go-offline
+RUN mvn clean package --quiet -DskipTests --batch-mode --fail-fast --no-transfer-progress
+
+
+FROM eclipse-temurin:17-jre
+WORKDIR /app
+COPY --from=builder /build/target/*.jar app.jar
 
 ENV SPRING_PROFILE=prod
 ENV DB_HOST=192.168.137.178
