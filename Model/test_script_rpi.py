@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import tflite_runtime.interpreter as tflite
+import time
 
 # Load the Edge TPU delegate
 try:
@@ -16,10 +17,19 @@ with open('labelmap.txt', 'r') as f:
         label_map[int(idx)] = label
 
 # Load the Edge TPU-compatible TFLite model with Edge TPU delegate
-model_path = 'best_float32-2_edgetpu.tflite'  # Replace with your Edge TPU model path
-delegate = load_delegate('libedgetpu.so.1')
+model_path = 'best_float32_edgetpu.tflite'  # Replace with your Edge TPU model path
+try:
+    delegate = load_delegate('libedgetpu.so.1')
+    print("Edge TPU delegate loaded successfully.")
+except Exception as e:
+    raise RuntimeError(f"Failed to load Edge TPU delegate: {e}")
+
 interpreter = tflite.Interpreter(model_path=model_path, experimental_delegates=[delegate])
-interpreter.allocate_tensors()
+try:
+    interpreter.allocate_tensors()
+    print("Model allocated on Edge TPU successfully.")
+except Exception as e:
+    raise RuntimeError(f"Failed to allocate tensors on Edge TPU: {e}")
 
 # Get input and output details
 input_details = interpreter.get_input_details()
@@ -42,8 +52,11 @@ input_data /= 255.0
 # Set input tensor
 interpreter.set_tensor(input_details[0]['index'], input_data)
 
-# Run inference
+# Run inference with timing
+start_time = time.time()
 interpreter.invoke()
+inference_time = time.time() - start_time
+print(f"Inference time: {inference_time:.4f} seconds")
 
 # Get output tensor [1, 8, 8400]
 output = interpreter.get_tensor(output_details[0]['index'])[0]  # [8, 8400]
@@ -153,4 +166,4 @@ for i, idx in enumerate(valid_indices):
 output_filename = f'pred_{predicted_class}.jpg'
 cv2.imwrite(output_filename, resized_image)
 
-print(f'Image saved as {output_filename}')
+print(f"Image saved as {output_filename}")

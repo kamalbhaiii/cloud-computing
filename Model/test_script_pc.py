@@ -10,7 +10,7 @@ with open('labelmap.txt', 'r') as f:
         label_map[int(idx)] = label
 
 # Load the TFLite model and allocate tensors
-interpreter = tf.lite.Interpreter(model_path='best_float32-2.tflite')  # Replace with your .tflite model path
+interpreter = tf.lite.Interpreter(model_path='best_float32.tflite')  # Replace with your .tflite model path
 interpreter.allocate_tensors()
 
 # Get input and output details
