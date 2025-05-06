@@ -4,10 +4,10 @@ import tensorflow as tf
 import time
 
 # ====== CONFIG ======
-MODEL_PATH = "best_float32.tflite"  # Standard TFLite model
+MODEL_PATH = "best_float32-2_edgetpu.tflite"  # Standard TFLite model
 LABEL_PATH = "labelmap.txt"
 INPUT_SIZE = 320  # Roboflow-provided input size
-CONF_THRESHOLD = 0.4
+CONF_THRESHOLD = 0.5
 
 # ====== Load labels ======
 with open(LABEL_PATH, "r") as f:

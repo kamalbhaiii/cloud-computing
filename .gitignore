@@ -4,3 +4,4 @@ token.*
 *-ignore.*
 *ignore*
 server/target/
+backup
