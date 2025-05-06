@@ -5,3 +5,4 @@ token.*
 *ignore*
 server/target/
 backup
+pred_*.*

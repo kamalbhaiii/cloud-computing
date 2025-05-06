@@ -2,6 +2,12 @@ import cv2
 import numpy as np
 import tflite_runtime.interpreter as tflite
 
+# Load the Edge TPU delegate
+try:
+    from tflite_runtime.interpreter import load_delegate
+except ImportError:
+    raise ImportError("Cannot import load_delegate from tflite_runtime.interpreter. Ensure tflite-runtime is installed correctly.")
+
 # Load the label map
 label_map = {}
 with open('labelmap.txt', 'r') as f:
@@ -11,7 +17,7 @@ with open('labelmap.txt', 'r') as f:
 
 # Load the Edge TPU-compatible TFLite model with Edge TPU delegate
 model_path = 'best_float32_edgetpu.tflite'  # Replace with your Edge TPU model path
-delegate = tflite.experimental.load_delegate('libedgetpu.so.1')
+delegate = load_delegate('libedgetpu.so.1')
 interpreter = tflite.Interpreter(model_path=model_path, experimental_delegates=[delegate])
 interpreter.allocate_tensors()
 
@@ -24,6 +30,8 @@ print("Output details:", output_details)
 
 # Load and preprocess the test image, resizing to 640x640
 image = cv2.imread('test_dog.jpg')
+if image is None:
+    raise FileNotFoundError("Could not load image 'test_dog.jpg'. Ensure the file exists in the working directory.")
 image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 resized_image = cv2.resize(image_rgb, (640, 640))  # Resize to 640x640
 input_data = np.expand_dims(resized_image, axis=0).astype(np.float32)
