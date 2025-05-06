@@ -3,10 +3,6 @@ import numpy as np
 import tflite_runtime.interpreter as tflite
 import time
 from picamera2 import Picamera2
-from minio import Minio
-from minio.error import S3Error
-import uuid
-import io
 
 # Load the Edge TPU delegate
 try:
@@ -39,25 +35,6 @@ except Exception as e:
 # Get input and output details
 input_details = interpreter.get_input_details()
 output_details = interpreter.get_output_details()
-
-# Initialize MinIO client
-minio_client = Minio(
-    "your-minio-endpoint:9000",  # Replace with your MinIO endpoint
-    access_key="your-access-key",  # Replace with your MinIO access key
-    secret_key="your-secret-key",  # Replace with your MinIO secret key
-    secure=False  # Set to True if using HTTPS
-)
-bucket_name = "detections"  # Replace with your bucket name
-
-# Ensure bucket exists
-try:
-    if not minio_client.bucket_exists(bucket_name):
-        minio_client.make_bucket(bucket_name)
-        print(f"Bucket {bucket_name} created.")
-    else:
-        print(f"Bucket {bucket_name} already exists.")
-except S3Error as e:
-    print(f"MinIO connection failed: {e}. Falling back to display mode.")
 
 # Initialize PiCamera2
 picam2 = Picamera2()
@@ -122,7 +99,6 @@ try:
 
         # Filter detections
         valid_indices = np.where(scores > 0.1)[0]  # Confidence threshold
-        predicted_class = 'unknown'
         display_frame = frame_rgb.copy()
 
         if len(valid_indices) == 0:
@@ -138,7 +114,7 @@ try:
         for idx in valid_indices:
             box = boxes[idx]
             score = scores[idx]
-            class_id = classes[idx]
+            class_id classes[idx]
             # Test [x_min, y_min, x_max, y_max] format
             x_min, y_min, x_max, y_max = box
             x1 = int(x_min * img_width)
@@ -157,36 +133,15 @@ try:
             if area_center > area_xy:
                 x1, y1, x2, y2 = x1_center, y1_center, x2_center, y2_center
             label = label_map[class_id]
-            if predicted_class == 'unknown':
-                predicted_class = label
 
             # Draw bounding box
             cv2.rectangle(display_frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
             cv2.putText(display_frame, f'{label} {score:.2f}', (x1, y1 - 10),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
-        # If detections exist, attempt to upload to MinIO
-        if predicted_class != 'unknown':
-            try:
-                # Convert frame to JPEG
-                _, buffer = cv2.imencode('.jpg', cv2.cvtColor(display_frame, cv2.COLOR_RGB2BGR))
-                buffer_io = io.BytesIO(buffer)
-                filename = f"pred_{predicted_class}_{uuid.uuid4()}.jpg"
-                # Upload to MinIO
-                minio_client.put_object(
-                    bucket_name,
-                    filename,
-                    buffer_io,
-                    length=len(buffer),
-                    content_type='image/jpeg'
-                )
-                print(f"Uploaded {filename} to MinIO (Class: {predicted_class}, Inference: {inference_time:.4f}s)")
-            except S3Error as e:
-                print(f"MinIO upload failed: {e}. Displaying detections.")
-                cv2.imshow("Detections", cv2.cvtColor(display_frame, cv2.COLOR_RGB2BGR))
-        else:
-            # No detections, show frame
-            cv2.imshow("Detections", cv2.cvtColor(display_frame, cv2.COLOR_RGB2BGR))
+        # Show frame with detections
+        cv2.imshow("Detections", cv2.cvtColor(display_frame, cv2.COLOR_RGB2BGR))
+        print(f"Inference time: {inference_time:.4f} seconds")
 
         # Exit on 'q' key
         if cv2.waitKey(1) & 0xFF == ord('q'):
