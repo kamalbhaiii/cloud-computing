@@ -114,7 +114,7 @@ try:
         for idx in valid_indices:
             box = boxes[idx]
             score = scores[idx]
-            class_id classes[idx]
+            class_id= classes[idx]
             # Test [x_min, y_min, x_max, y_max] format
             x_min, y_min, x_max, y_max = box
             x1 = int(x_min * img_width)
