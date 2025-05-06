@@ -16,7 +16,7 @@ with open('labelmap.txt', 'r') as f:
         label_map[int(idx)] = label
 
 # Load the Edge TPU-compatible TFLite model with Edge TPU delegate
-model_path = 'best_float32_edgetpu.tflite'  # Replace with your Edge TPU model path
+model_path = 'best_float32-2_edgetpu.tflite'  # Replace with your Edge TPU model path
 delegate = load_delegate('libedgetpu.so.1')
 interpreter = tflite.Interpreter(model_path=model_path, experimental_delegates=[delegate])
 interpreter.allocate_tensors()
