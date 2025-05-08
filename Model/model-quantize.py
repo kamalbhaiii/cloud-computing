@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 # Load float model
-converter = tf.lite.TFLiteConverter.from_saved_model("path_to_saved_model")  # or from_keras_model()
+converter = tf.lite.TFLiteConverter.from_saved_model("best_float32_edgetpu.tflite")  # or from_keras_model()
 converter.optimizations = [tf.lite.Optimize.DEFAULT]
 
 # Representative dataset (needed for proper quantization)
