@@ -1,8 +1,9 @@
 import numpy as np
 import time
 from picamera2 import Picamera2
-from pycoral.utils.edgetpu import make_interpreter
+from pycoral.utils.edgetpu import make_interpreter, run_inference
 from pycoral.adapters.common import input_size, set_input
+from pycoral.adapters.detect import get_objects
 from PIL import Image
 
 # Load the label map
@@ -28,44 +29,17 @@ picam2.configure(config)
 picam2.start()
 print("Pi Camera initialized.")
 
-def parse_yolo_output(output, threshold=0.1):
-    """
-    Parse the YOLO output from Edge TPU inference result.
-    output: The raw tensor output from the model
-    threshold: Confidence score threshold for filtering detections
-    Returns: List of detected objects with class, score, and bounding box
-    """
-    detections = []
-    print(f"Output shape: {output.shape}")  # Debugging: Check shape of the output
-    for i in range(output.shape[0]):  # Loop over all possible detections (8 per detection)
-        detection = output[i]
-        print(f"Detection {i}: {detection}")  # Debugging: Print the raw detection data
-
-        # Extract class and confidence values (assuming this layout based on common YOLO format)
-        conf = detection[0]  # Confidence score (first element)
-        if conf > threshold:  # Only consider detections with confidence > threshold
-            class_idx = np.argmax(detection[1:])  # Get the class index with the highest score
-            class_label = label_map.get(class_idx, "Unknown")
-            # Bounding box (assuming it's stored in the next few elements)
-            x, y, w, h = detection[1], detection[2], detection[3], detection[4]
-            detections.append({
-                'class': class_label,
-                'confidence': conf,
-                'bbox': (x, y, w, h)
-            })
-    return detections
-
 try:
     while True:
         # Capture frame as numpy array
         frame = picam2.capture_array()
-
+        
         # Convert BGR to RGB using NumPy
         rgb = frame[..., [2, 1, 0]]  # Swap BGR to RGB by reordering channels
 
         # Resize using PIL
         pil_image = Image.fromarray(rgb)
-        resized = pil_image.resize((input_w, input_h), Image.Resampling.LANCZOS)  # Updated for Pillow 10+
+        resized = pil_image.resize((input_w, input_h), Image.Resampling.LANCZOS)
         resized_array = np.array(resized)
 
         # Prepare input for the model
@@ -73,18 +47,18 @@ try:
 
         # Run inference
         start_time = time.time()
-        interpreter.invoke()  # Run the inference
+        run_inference(interpreter)
         inference_time = time.time() - start_time
 
-        # Get the output tensor and parse it
-        output = interpreter.tensor(interpreter.get_output_details()[0]['index'])()[0]
-        detections = parse_yolo_output(output)
+        # Get detected objects
+        objs = get_objects(interpreter, score_threshold=0.1)
 
         # Print detections to terminal
-        if detections:
-            for det in detections:
-                print(f"Predicted: {det['class']} with Confidence: {det['confidence']:.2f}")
-                print(f"Bounding box: {det['bbox']}")
+        if objs:
+            for obj in objs:
+                label = label_map.get(obj.id, obj.id)
+                score = obj.score
+                print(f"Predicted: {label.capitalize()} with Confidence: {score:.2f}")
         else:
             print("No objects detected.")
 
