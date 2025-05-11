@@ -50,10 +50,11 @@ try:
         interpreter.invoke()  # Replace run_inference(interpreter) with this
         inference_time = time.time() - start_time
 
+
+        print(interpreter.get_output_details())
+
         # Get detected objects
         objs = get_objects(interpreter, score_threshold=0.1)
-
-        print(interpreter.get_output_details)
 
         # Print detections to terminal
         if objs:
