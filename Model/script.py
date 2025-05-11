@@ -36,19 +36,20 @@ def parse_yolo_output(output, threshold=0.1):
     Returns: List of detected objects with class, score, and bounding box
     """
     detections = []
-    # Each detection consists of 8 values: [x, y, w, h, conf, class_1, class_2, ...]
+    print(f"Output shape: {output.shape}")  # Debugging: Check shape of the output
     for i in range(output.shape[1]):  # Iterate through the 8 elements per detection
         detection = output[0, i]
-        # Assuming the first 4 are coordinates and confidence is at index 4
-        x, y, w, h, conf = detection[0], detection[1], detection[2], detection[3], detection[4]
-        if conf > threshold:  # Only consider detections with confidence > threshold
-            class_idx = np.argmax(detection[5:])  # Get the class index with the highest score
-            class_label = label_map.get(class_idx, "Unknown")
-            detections.append({
-                'class': class_label,
-                'confidence': conf,
-                'bbox': (x, y, w, h)
-            })
+        print(f"Detection {i}: {detection}")  # Debugging: Print the raw detection data
+        if len(detection) >= 5:  # Check if there are enough values to unpack
+            x, y, w, h, conf = detection[0], detection[1], detection[2], detection[3], detection[4]
+            if conf > threshold:  # Only consider detections with confidence > threshold
+                class_idx = np.argmax(detection[5:])  # Get the class index with the highest score
+                class_label = label_map.get(class_idx, "Unknown")
+                detections.append({
+                    'class': class_label,
+                    'confidence': conf,
+                    'bbox': (x, y, w, h)
+                })
     return detections
 
 try:
