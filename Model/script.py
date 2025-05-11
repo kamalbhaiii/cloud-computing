@@ -51,6 +51,7 @@ try:
         inference_time = time.time() - start_time
 
         # Get detected objects
+        print(interpreter)
         objs = get_objects(interpreter, score_threshold=0.1)
 
         # Print detections to terminal
