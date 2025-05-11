@@ -47,7 +47,7 @@ try:
 
         # Run inference
         start_time = time.time()
-        run_inference(interpreter)
+        interpreter.invoke()  # Replace run_inference(interpreter) with this
         inference_time = time.time() - start_time
 
         # Get detected objects
