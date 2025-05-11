@@ -3,7 +3,6 @@ import time
 from picamera2 import Picamera2
 from pycoral.utils.edgetpu import make_interpreter
 from pycoral.adapters.common import input_size, set_input
-from pycoral.adapters.detect import get_objects
 from PIL import Image
 
 # Load the label map
@@ -29,17 +28,40 @@ picam2.configure(config)
 picam2.start()
 print("Pi Camera initialized.")
 
+def parse_yolo_output(output, threshold=0.1):
+    """
+    Parse the YOLO output from Edge TPU inference result.
+    output: The raw tensor output from the model
+    threshold: Confidence score threshold for filtering detections
+    Returns: List of detected objects with class, score, and bounding box
+    """
+    detections = []
+    # Each detection consists of 8 values: [x, y, w, h, conf, class_1, class_2, ...]
+    for i in range(output.shape[1]):  # Iterate through the 8 elements per detection
+        detection = output[0, i]
+        # Assuming the first 4 are coordinates and confidence is at index 4
+        x, y, w, h, conf = detection[0], detection[1], detection[2], detection[3], detection[4]
+        if conf > threshold:  # Only consider detections with confidence > threshold
+            class_idx = np.argmax(detection[5:])  # Get the class index with the highest score
+            class_label = label_map.get(class_idx, "Unknown")
+            detections.append({
+                'class': class_label,
+                'confidence': conf,
+                'bbox': (x, y, w, h)
+            })
+    return detections
+
 try:
     while True:
         # Capture frame as numpy array
         frame = picam2.capture_array()
-        
+
         # Convert BGR to RGB using NumPy
         rgb = frame[..., [2, 1, 0]]  # Swap BGR to RGB by reordering channels
 
         # Resize using PIL
         pil_image = Image.fromarray(rgb)
-        resized = pil_image.resize((input_w, input_h), Image.LANCZOS)  # Use Image.LANCZOS for older Pillow
+        resized = pil_image.resize((input_w, input_h), Image.Resampling.LANCZOS)  # Updated for Pillow 10+
         resized_array = np.array(resized)
 
         # Prepare input for the model
@@ -47,23 +69,18 @@ try:
 
         # Run inference
         start_time = time.time()
-        interpreter.invoke()  # Use invoke instead of run_inference
+        interpreter.invoke()  # Run the inference
         inference_time = time.time() - start_time
 
-        # Debug code for Interpreter
-        print("Model Output Tensor Details:")
-        for i, detail in enumerate(interpreter.get_output_details()):
-            print(f"Output {i}: {detail}")
-
-        # Get detected objects
-        objs = get_objects(interpreter, score_threshold=0.1)
+        # Get the output tensor and parse it
+        output = interpreter.tensor(interpreter.get_output_details()[0]['index'])()[0]
+        detections = parse_yolo_output(output)
 
         # Print detections to terminal
-        if objs:
-            for obj in objs:
-                label = label_map.get(obj.id, obj.id)
-                score = obj.score
-                print(f"Predicted: {label.capitalize()} with Confidence: {score:.2f}")
+        if detections:
+            for det in detections:
+                print(f"Predicted: {det['class']} with Confidence: {det['confidence']:.2f}")
+                print(f"Bounding box: {det['bbox']}")
         else:
             print("No objects detected.")
 
