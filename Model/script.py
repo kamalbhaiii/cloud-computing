@@ -37,19 +37,22 @@ def parse_yolo_output(output, threshold=0.1):
     """
     detections = []
     print(f"Output shape: {output.shape}")  # Debugging: Check shape of the output
-    for i in range(output.shape[1]):  # Iterate through the 8 elements per detection
-        detection = output[0, i]
+    for i in range(output.shape[0]):  # Loop over all possible detections (8 per detection)
+        detection = output[i]
         print(f"Detection {i}: {detection}")  # Debugging: Print the raw detection data
-        if len(detection) >= 5:  # Check if there are enough values to unpack
-            x, y, w, h, conf = detection[0], detection[1], detection[2], detection[3], detection[4]
-            if conf > threshold:  # Only consider detections with confidence > threshold
-                class_idx = np.argmax(detection[5:])  # Get the class index with the highest score
-                class_label = label_map.get(class_idx, "Unknown")
-                detections.append({
-                    'class': class_label,
-                    'confidence': conf,
-                    'bbox': (x, y, w, h)
-                })
+
+        # Extract class and confidence values (assuming this layout based on common YOLO format)
+        conf = detection[0]  # Confidence score (first element)
+        if conf > threshold:  # Only consider detections with confidence > threshold
+            class_idx = np.argmax(detection[1:])  # Get the class index with the highest score
+            class_label = label_map.get(class_idx, "Unknown")
+            # Bounding box (assuming it's stored in the next few elements)
+            x, y, w, h = detection[1], detection[2], detection[3], detection[4]
+            detections.append({
+                'class': class_label,
+                'confidence': conf,
+                'bbox': (x, y, w, h)
+            })
     return detections
 
 try:
