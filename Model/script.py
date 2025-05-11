@@ -1,7 +1,7 @@
 import numpy as np
 import time
 from picamera2 import Picamera2
-from pycoral.utils.edgetpu import make_interpreter, run_inference
+from pycoral.utils.edgetpu import make_interpreter
 from pycoral.adapters.common import input_size, set_input
 from pycoral.adapters.detect import get_objects
 from PIL import Image
@@ -39,7 +39,7 @@ try:
 
         # Resize using PIL
         pil_image = Image.fromarray(rgb)
-        resized = pil_image.resize((input_w, input_h), Image.Resampling.LANCZOS)
+        resized = pil_image.resize((input_w, input_h), Image.LANCZOS)  # Use Image.LANCZOS for older Pillow
         resized_array = np.array(resized)
 
         # Prepare input for the model
@@ -47,7 +47,7 @@ try:
 
         # Run inference
         start_time = time.time()
-        run_inference(interpreter)
+        interpreter.invoke()  # Use invoke instead of run_inference
         inference_time = time.time() - start_time
 
         # Get detected objects
