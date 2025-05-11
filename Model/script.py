@@ -1,11 +1,10 @@
-import cv2
 import numpy as np
 import time
 from picamera2 import Picamera2
-
 from pycoral.utils.edgetpu import make_interpreter, run_inference
 from pycoral.adapters.common import input_size, set_input
 from pycoral.adapters.detect import get_objects
+from PIL import Image
 
 # Load the label map
 label_map = {}
@@ -15,7 +14,7 @@ with open('labelmap.txt', 'r') as f:
         label_map[int(idx)] = label
 
 # Load the Edge TPU model using pycoral
-model_path = 'best_float32_edgetpu.tflite'  # Use quantized model for Coral TPU
+model_path = 'best_float32_edgetpu.tflite'
 interpreter = make_interpreter(model_path)
 interpreter.allocate_tensors()
 print("Model loaded and allocated using pycoral.")
@@ -30,42 +29,47 @@ picam2.configure(config)
 picam2.start()
 print("Pi Camera initialized.")
 
-cv2.namedWindow("Detections", cv2.WINDOW_NORMAL)
-
 try:
     while True:
+        # Capture frame as numpy array
         frame = picam2.capture_array()
-        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        resized = cv2.resize(rgb, (input_w, input_h))
+        
+        # Convert BGR to RGB using NumPy
+        rgb = frame[..., [2, 1, 0]]  # Swap BGR to RGB by reordering channels
 
-        set_input(interpreter, resized)
+        # Resize using PIL
+        pil_image = Image.fromarray(rgb)
+        resized = pil_image.resize((input_w, input_h), Image.Resampling.LANCZOS)
+        resized_array = np.array(resized)
 
+        # Prepare input for the model
+        set_input(interpreter, resized_array)
+
+        # Run inference
         start_time = time.time()
         run_inference(interpreter)
         inference_time = time.time() - start_time
 
+        # Get detected objects
         objs = get_objects(interpreter, score_threshold=0.1)
 
-        display_frame = rgb.copy()
+        # Print detections to terminal
+        if objs:
+            for obj in objs:
+                label = label_map.get(obj.id, obj.id)
+                score = obj.score
+                print(f"Predicted: {label.capitalize()} with Confidence: {score:.2f}")
+        else:
+            print("No objects detected.")
 
-        for obj in objs:
-            bbox = obj.bbox
-            label = label_map.get(obj.id, obj.id)
-            score = obj.score
-
-            cv2.rectangle(display_frame, (bbox.xmin, bbox.ymin), (bbox.xmax, bbox.ymax), (0, 255, 0), 2)
-            cv2.putText(display_frame, f'{label} {score:.2f}', (bbox.xmin, bbox.ymin - 10),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-
-        cv2.imshow("Detections", cv2.cvtColor(display_frame, cv2.COLOR_RGB2BGR))
         print(f"Inference time: {inference_time:.4f} seconds")
+        print("-" * 50)
 
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+        # Small delay to prevent overwhelming the terminal
+        time.sleep(0.1)
 
 except KeyboardInterrupt:
     print("Exiting gracefully.")
 finally:
     picam2.stop()
-    cv2.destroyAllWindows()
-    print("Camera and windows closed.")
+    print("Camera closed.")
