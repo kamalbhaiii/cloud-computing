@@ -50,8 +50,12 @@ try:
         interpreter.invoke()  # Use invoke instead of run_inference
         inference_time = time.time() - start_time
 
+        # Debug code for Interpreter
+        print("Model Output Tensor Details:")
+        for i, detail in enumerate(interpreter.get_output_details()):
+            print(f"Output {i}: {detail}")
+
         # Get detected objects
-        print(interpreter)
         objs = get_objects(interpreter, score_threshold=0.1)
 
         # Print detections to terminal
