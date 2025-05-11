@@ -53,6 +53,8 @@ try:
         # Get detected objects
         objs = get_objects(interpreter, score_threshold=0.1)
 
+        print(interpreter.get_output_details)
+
         # Print detections to terminal
         if objs:
             for obj in objs:
