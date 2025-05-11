@@ -4,7 +4,6 @@ from picamera2 import Picamera2
 from pycoral.utils.edgetpu import make_interpreter
 from pycoral.adapters.common import input_size, set_input
 from PIL import Image
-import cv2
 
 # Load the label map
 label_map = {}
@@ -30,7 +29,7 @@ picam2.start()
 print("Pi Camera initialized.")
 
 # Post-processing parameters
-CONFIDENCE_THRESHOLD = 0.3
+CONFIDENCE_THRESHOLD = 0.5
 IOU_THRESHOLD = 0.5
 
 def iou(box1, box2):
@@ -85,6 +84,9 @@ try:
         # Get output
         output_details = interpreter.get_output_details()
         output_data = interpreter.get_tensor(output_details[0]['index'])[0]  # (num_boxes, 7)
+
+        print("Output shape:", output_data.shape)
+        print("Sample output:", output_data[:5])
 
         predictions = []
         for pred in output_data:
