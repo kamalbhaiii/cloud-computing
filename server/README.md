@@ -2,8 +2,6 @@
 
 ## Overview
 This project uses Docker to deploy the application in a containerized environment. The configuration supports environment variables that can be set during build and runtime to make the application flexible. This guide also includes instructions for building the Docker image for ARM32v7 architecture (e.g., Raspberry Pi).
-
-The build is being done separately on github action.
 ---
 
 ## Docker Build Process
