@@ -1,26 +1,22 @@
-FROM eclipse-temurin:17-jdk AS maven_tool_chain_cache
+# Build stage using Maven
+FROM maven:3.9.6-eclipse-temurin-17 AS builder
 
-# Install Maven
-RUN apt-get update && apt-get install -y maven
-
-# Set working directory
 WORKDIR /build
 
-# Copy necessary files for Maven build
-COPY ./server/pom.xml .
+# Copy source code
+COPY ./server/pom.xml ./
 COPY ./server/src ./src
 
 # Build application
 RUN mvn clean package -DskipTests -B
 
-# Final image
+# Final minimal runtime image
 FROM eclipse-temurin:17-jdk
 
-# Set working directory in final image
 WORKDIR /app
 
-# Copy built JAR from previous stage
-COPY --from=maven_tool_chain_cache /build/target/*.jar app.jar
+# Copy only the built JAR
+COPY --from=builder /build/target/*.jar app.jar
 
 # Set environment variables
 ENV SPRING_PROFILE=prod \
@@ -32,5 +28,5 @@ ENV SPRING_PROFILE=prod \
     SERVER_ADDRESS=192.168.137.178 \
     SERVER_PORT=30070
 
-# Entry point
+# Run the app with active Spring profile
 ENTRYPOINT ["sh", "-c", "java -Dspring.profiles.active=$SPRING_PROFILE -jar app.jar"]
