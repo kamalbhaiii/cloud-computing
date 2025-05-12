@@ -14,7 +14,7 @@ def upload_to_minio(queue):
         secret_key="ZDCoFLJDLQPw848mbxZ7KAYUrCoY88MsHEoC40qk",  # Replace with your MinIO secret key
         secure=False  # Set to True if using HTTPS
     )
-    bucket_name = "detections"
+    bucket_name = "wildlife-detections"
 
     # Create bucket if it doesn't exist
     try:
