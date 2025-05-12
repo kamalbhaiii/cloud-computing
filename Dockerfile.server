@@ -13,12 +13,12 @@ WORKDIR /app
 COPY --from=maven_tool_chain_cache /build/target/ ./
 
 ENV SPRING_PROFILE=prod
-ENV DB_HOST=10.20.30.3
-ENV DB_PORT=3306
-ENV DB_NAME=cloud-ai
+ENV DB_HOST=192.168.137.178
+ENV DB_PORT=30050
+ENV DB_NAME=cloud-computing
 ENV DB_USERNAME=root
-ENV DB_PASS=cloud-ai
-ENV SERVER_ADDRESS=10.20.30.4
-ENV SERVER_PORT=9090
+ENV DB_PASS=admin
+ENV SERVER_ADDRESS=192.168.137.178
+ENV SERVER_PORT=30070
 
 ENTRYPOINT ["java", "-Dspring.profiles.active=${SPRING_PROFILE}", "-jar", "Backend-1.0.0.jar"]
