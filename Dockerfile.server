@@ -1,21 +1,44 @@
-# Use an official Maven image to build the app
-FROM maven:3.8.8-eclipse-temurin-17 AS build
+# # Use an official Maven image to build the app
+# FROM maven:3.8.8-eclipse-temurin-17 AS build
 
-WORKDIR /app
+# WORKDIR /app
 
-# Copy all project files
-COPY ./server/ .
+# # Copy all project files
+# COPY ./server/ .
 
-# Build the Spring Boot application using Maven
-RUN mvn clean package -DskipTests
+# # Build the Spring Boot application using Maven
+# RUN mvn clean package -DskipTests
 
-# Use a lightweight JDK image for running the app
+# # Use a lightweight JDK image for running the app
+# FROM eclipse-temurin:17-jdk
+
+# WORKDIR /app
+
+# # Copy the fat jar from the builder stage
+# COPY --from=build /app/target/*.jar app.jar
+
+# # Set environment variables
+# ENV SPRING_PROFILE=prod \
+#     DB_HOST=192.168.137.178 \
+#     DB_PORT=30050 \
+#     DB_NAME=cloud-computing \
+#     DB_USERNAME=root \
+#     DB_PASS=admin \
+#     SERVER_ADDRESS=192.168.137.178 \
+#     SERVER_PORT=30070
+
+# # Run the jar file
+# ENTRYPOINT ["sh", "-c", "java -Dspring.profiles.active=$SPRING_PROFILE -jar app.jar"]
+
+
+# Use a base image with JDK 17 (lightweight version)
 FROM eclipse-temurin:17-jdk
 
+# Set the working directory inside the container
 WORKDIR /app
 
-# Copy the fat jar from the builder stage
-COPY --from=build /app/target/*.jar app.jar
+# Copy the pre-built JAR file from the 'server/target' directory to the container
+COPY server/target/*.jar app.jar
 
 # Set environment variables
 ENV SPRING_PROFILE=prod \

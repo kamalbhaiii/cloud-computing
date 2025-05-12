@@ -26,6 +26,26 @@ jobs:
             echo "changes_detected=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Set up JDK
+        if: steps.check_changes.outputs.changes_detected == 'true'
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Cache Maven dependencies
+        if: steps.check_changes.outputs.changes_detected == 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-maven-${{ hashFiles('server/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven
+
+      - name: Build Spring Boot JAR
+        if: steps.check_changes.outputs.changes_detected == 'true'
+        working-directory: server
+        run: mvn clean package -DskipTests
+
       - name: Set up QEMU
         if: steps.check_changes.outputs.changes_detected == 'true'
         uses: docker/setup-qemu-action@v3
@@ -59,7 +79,6 @@ jobs:
           platforms: linux/arm/v7
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/cloud-computing-server:${{ steps.generate_tag.outputs.tag }}
-          no-cache: true  # Temporarily disable cache to rule out corrupted layers
 
       - name: Update server.yaml
         if: steps.check_changes.outputs.changes_detected == 'true'
