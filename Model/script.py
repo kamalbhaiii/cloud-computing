@@ -5,7 +5,8 @@ from pycoral.utils.edgetpu import list_edge_tpus
 from picamera2 import Picamera2
 import time
 from multiprocessing import Process, Queue
-import minio_uploader  # Import the uploader script
+from PIL import Image, ImageDraw, ImageFont
+import minio_uploader
 
 # Debug: List TPUs
 print("[DEBUG] Listing all TPU(s) connected")
@@ -95,6 +96,7 @@ try:
         output = output[0]  # Remove batch dimension: (8, 8400)
         objectness_scores = output[4, :]  # Objectness scores
         class_scores = output[5:9, :]  # Class scores for 4 classes
+        box_coords = output[0:4, :]  # Bounding box coordinates: x, y, w, h
 
         # Find detection with highest objectness score
         max_idx = np.argmax(objectness_scores)
@@ -130,10 +132,48 @@ try:
         # Print prediction
         print(f"Predicted: {predicted_label} with Confidence: {confidence:.4f}")
 
+        # Get bounding box coordinates
+        x, y, w, h = box_coords[:, max_idx]
+        print(f"[DEBUG] Bounding box coords: x={x:.2f}, y={y:.2f}, w={w:.2f}, h={h:.2f}")
+
+        # Draw bounding box and label on the image
+        frame_rgb = picam2.capture_array()[:height, :width, :3]  # Capture fresh frame
+        try:
+            image = Image.fromarray(frame_rgb.astype(np.uint8))
+            draw = ImageDraw.Draw(image)
+
+            # Assume coordinates are normalized (0-1); scale to image size
+            x1 = int(x * width - w * width / 2)
+            y1 = int(y * height - h * height / 2)
+            x2 = int(x * width + w * width / 2)
+            y2 = int(y * height + h * height / 2)
+
+            # Ensure coordinates are within image bounds
+            x1, y1 = max(0, x1), max(0, y1)
+            x2, y2 = min(width - 1, x2), min(height - 1, y2)
+            print(f"[DEBUG] Scaled bounding box: ({x1}, {y1}, {x2}, {y2})")
+
+            # Draw rectangle
+            draw.rectangle((x1, y1, x2, y2), outline="red", width=2)
+
+            # Draw label with confidence
+            label_text = f"{predicted_label}: {confidence:.4f}"
+            try:
+                font = ImageFont.truetype("DejaVuSans.ttf", 16)
+            except IOError:
+                font = ImageFont.load_default()
+            draw.text((x1, y1 - 20), label_text, fill="red", font=font)
+            print("[DEBUG] Bounding box and label drawn")
+
+            # Convert back to numpy array for queue
+            frame_rgb = np.array(image)
+        except Exception as e:
+            print("[ERROR] Failed to draw bounding box: {}".format(e))
+            continue
+
         # Send detection to upload queue
-        frame_rgb = picam2.capture_array()[:height, :width, :3]  # Capture fresh frame for upload
         upload_queue.put((frame_rgb, predicted_label, confidence))
-        print("[DEBUG] Detection sent to upload queue")
+        print("[DEBUG] Detection with bounding box sent to upload queue")
 
         # Debug: Frame rate
         elapsed = time.time() - start_time

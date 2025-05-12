@@ -1,6 +1,6 @@
 import os
-from minio import Minio
-from minio.error import S3Error
+from minio import Minio # type: ignore
+from minio.error import S3Error # type: ignore
 from PIL import Image
 import numpy as np
 import time
