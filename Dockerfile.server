@@ -1,15 +1,14 @@
-# Build stage using a Maven base image
-FROM maven:3.9.6-eclipse-temurin-17 AS maven_tool_chain_cache
+FROM eclipse-temurin:17-jdk AS maven_tool_chain_cache
+RUN apt-get update && apt-get install -y maven
+
 WORKDIR /build
 COPY ./server/pom.xml .
 COPY ./server/src ./src/
 
-# Run Maven commands
 RUN mvn dependency:go-offline
 RUN mvn clean package --quiet -DskipTests --batch-mode --fail-fast --no-transfer-progress
 
-# Runtime stage using ARM32 image
-FROM arm32v7/eclipse-temurin:17-jdk
+FROM eclipse-temurin:17-jdk
 WORKDIR /app
 COPY --from=maven_tool_chain_cache /build/target/ ./
 
