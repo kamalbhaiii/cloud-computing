@@ -28,7 +28,7 @@ def upload_to_minio(queue):
         return
 
     # Create temporary directory for images
-    temp_dir = "temp_images"
+    temp_dir = "temp_images_ignore"
     os.makedirs(temp_dir, exist_ok=True)
     print("[DEBUG] Temporary image directory created:", temp_dir)
 

@@ -2,7 +2,9 @@
 venv
 token.*
 *-ignore.*
+*_ignore.*
 *ignore*
 server/target/
 backup
 pred_*.*
+__pycache__
