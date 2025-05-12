@@ -10,8 +10,8 @@ def upload_to_minio(queue):
     # MinIO configuration
     minio_client = Minio(
         "192.168.137.178:30010",
-        access_key="your_access_key",  # Replace with your MinIO access key
-        secret_key="your_secret_key",  # Replace with your MinIO secret key
+        access_key="UAW9vG03CEqhmAJoOaff",  # Replace with your MinIO access key
+        secret_key="ZDCoFLJDLQPw848mbxZ7KAYUrCoY88MsHEoC40qk",  # Replace with your MinIO secret key
         secure=False  # Set to True if using HTTPS
     )
     bucket_name = "detections"

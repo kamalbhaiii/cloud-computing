@@ -1,5 +1,0 @@
-tflite-runtime==2.7.0
-numpy==1.21.6 
-Pillow==9.5.0 
-libcamera==0.0.9 
-pycoral==2.0.0
