@@ -4,6 +4,8 @@ from pycoral.adapters import common
 from pycoral.utils.edgetpu import list_edge_tpus
 from picamera2 import Picamera2
 import time
+from multiprocessing import Process, Queue
+import minio_uploader  # Import the uploader script
 
 # Debug: List TPUs
 print("[DEBUG] Listing all TPU(s) connected")
@@ -58,6 +60,13 @@ except Exception as e:
 CONFIDENCE_THRESHOLD = 0.5  # 50% confidence
 OBJECTNESS_THRESHOLD = 0.4  # Minimum objectness score
 CLASS_SCORE_THRESHOLD = 0.4  # Minimum class score
+
+# Initialize multiprocessing queue and uploader process
+upload_queue = Queue()
+uploader_process = Process(target=minio_uploader.upload_to_minio, args=(upload_queue,))
+uploader_process.daemon = True
+uploader_process.start()
+print("[DEBUG] MinIO uploader process started")
 
 # Main loop
 try:
@@ -121,6 +130,11 @@ try:
         # Print prediction
         print(f"Predicted: {predicted_label} with Confidence: {confidence:.4f}")
 
+        # Send detection to upload queue
+        frame_rgb = picam2.capture_array()[:height, :width, :3]  # Capture fresh frame for upload
+        upload_queue.put((frame_rgb, predicted_label, confidence))
+        print("[DEBUG] Detection sent to upload queue")
+
         # Debug: Frame rate
         elapsed = time.time() - start_time
         print(f"[DEBUG] Frame processed in {elapsed:.3f} seconds")
@@ -130,4 +144,6 @@ except KeyboardInterrupt:
 finally:
     picam2.stop()
     picam2.close()
-    print("[DEBUG] Camera stopped and resources released")
+    upload_queue.put(None)  # Signal uploader to stop
+    uploader_process.join()
+    print("[DEBUG] Camera stopped, uploader process terminated, and resources released")
