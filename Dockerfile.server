@@ -1,22 +1,25 @@
-# Build stage using Maven
+# --- Build stage ---
 FROM maven:3.9.6-eclipse-temurin-17 AS builder
 
-WORKDIR /build
+WORKDIR /app
 
-# Copy source code
+# Copy pom.xml and download dependencies first for Docker caching
 COPY ./server/pom.xml ./
+RUN mvn dependency:go-offline
+
+# Copy source files
 COPY ./server/src ./src
 
-# Build application
+# Build app
 RUN mvn clean package -DskipTests -B
 
-# Final minimal runtime image
+# --- Runtime stage ---
 FROM eclipse-temurin:17-jdk
 
 WORKDIR /app
 
-# Copy only the built JAR
-COPY --from=builder /build/target/*.jar app.jar
+# Copy built JAR
+COPY --from=builder /app/target/*.jar app.jar
 
 # Set environment variables
 ENV SPRING_PROFILE=prod \
@@ -28,5 +31,5 @@ ENV SPRING_PROFILE=prod \
     SERVER_ADDRESS=192.168.137.178 \
     SERVER_PORT=30070
 
-# Run the app with active Spring profile
+# Run app
 ENTRYPOINT ["sh", "-c", "java -Dspring.profiles.active=$SPRING_PROFILE -jar app.jar"]
