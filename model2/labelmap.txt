@@ -1,4 +1,0 @@
-0 cat
-1 dog
-2 bird
-3 person
