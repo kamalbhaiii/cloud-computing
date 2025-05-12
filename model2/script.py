@@ -21,7 +21,7 @@ except Exception as e:
 
 # Initialize Edge TPU model
 try:
-    interpreter = edgetpu.make_interpreter("float_32_edgetpu.tflite")
+    interpreter = edgetpu.make_interpreter("best_float32_edgetpu.tflite")
     interpreter.allocate_tensors()
     print("[DEBUG] Edge TPU model loaded and tensors allocated")
 except Exception as e:
