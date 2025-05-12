@@ -32,7 +32,7 @@
 
 
 # Use a base image with JDK 17 (lightweight version)
-FROM eclipse-temurin:17-jdk
+FROM arm32v7/eclipse-temurin:17-jdk
 
 # Set the working directory inside the container
 WORKDIR /app
