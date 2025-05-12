@@ -1,28 +1,37 @@
-# README: Docker Build and Usage with Docker Compose
+# README: Docker Build and Usage with Docker Compose (ARM32v7 Compatible)
 
 ## Overview
-This project uses Docker to deploy the application in a containerized environment. The configuration supports environment variables that can be set during build and runtime to make the application flexible.
+This project uses Docker to deploy the application in a containerized environment. The configuration supports environment variables that can be set during build and runtime to make the application flexible. This guide also includes instructions for building the Docker image for ARM32v7 architecture (e.g., Raspberry Pi).
 
 ---
 
 ## Docker Build Process
 
-### Steps to Build the Docker Image:
-1. **Understand the `Dockerfile`**:
-    - The `Dockerfile` consists of two stages:
-        1. **Build Phase**: Uses Maven to download dependencies and build the project.
-        2. **Runtime Phase**: Uses a lightweight OpenJDK image to run the application.
+### Steps to Build the Docker Image for ARM32v7:
 
-2. **Build the Image**:
-   Run the following command to build the Docker image:
+1. **Install QEMU for Cross-Platform Support:**
    ```bash
-   docker build -t backend-app .
+   docker run --privileged --rm tonistiigi/binfmt --install all
    ```
 
-3. **Important Arguments in the Dockerfile**:
-    - `SPRING_PROFILE`: Specifies the active Spring profile (e.g., `prod`).
-    - `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`: Database configuration variables.
-    - `SERVER_ADDRESS`, `SERVER_PORT`: Server address and port.
+2. **Set up Buildx:**
+   ```bash
+   docker buildx create --use --name armv7-builder
+   docker buildx inspect --bootstrap
+   ```
+
+3. **Build the Image:**
+   Ensure your Dockerfile uses ARM32v7-compatible base images (e.g., `arm32v7/eclipse-temurin`).
+
+   Run the following command:
+   ```bash
+   sudo docker buildx build --platform linux/arm/v7 --load -t cloud-ai-server:latest -f Dockerfile.server .
+   ```
+
+4. **Important Arguments in the Dockerfile:**
+   - `SPRING_PROFILE`: Specifies the active Spring profile (e.g., `prod`).
+   - `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`: Database configuration variables.
+   - `SERVER_ADDRESS`, `SERVER_PORT`: Server address and port.
 
 ---
 
@@ -31,15 +40,13 @@ This project uses Docker to deploy the application in a containerized environmen
 ### Using Docker Compose:
 Docker Compose allows you to easily start the application and its dependencies (e.g., the database).
 
-1. **Example `docker-compose.yml`**:
+1. **Example `docker-compose.yml`:**
    ```yaml
    version: '3.8'
 
    services:
      backend:
-       build:
-         context: .
-         dockerfile: Dockerfile
+       image: cloud-ai-server:latest
        environment:
          SPRING_PROFILE: prod
          DB_HOST: db
@@ -55,21 +62,20 @@ Docker Compose allows you to easily start the application and its dependencies (
          - db
 
      db:
-       image: mysql:8.0
+       image: mariadb:10.11
        environment:
-         MYSQL_ROOT_PASSWORD: cloud-ai
-         MYSQL_DATABASE: cloud-ai
+         MARIADB_ROOT_PASSWORD: cloud-ai
+         MARIADB_DATABASE: cloud-ai
        ports:
          - "3306:3306"
    ```
 
-2. **Start the Application**:
-   Run the following command to start the application with Docker Compose:
+2. **Start the Application:**
    ```bash
    docker-compose up --build
    ```
 
-3. **Stop the Application**:
+3. **Stop the Application:**
    ```bash
    docker-compose down
    ```
@@ -79,22 +85,23 @@ Docker Compose allows you to easily start the application and its dependencies (
 ## Environment Variables
 
 | Variable         | Description                          | Example Value      |
-|-------------------|--------------------------------------|--------------------|
-| `SPRING_PROFILE`  | Active Spring profile               | `prod`             |
-| `DB_HOST`         | Database hostname                   | `db`               |
-| `DB_PORT`         | Database port                       | `3306`             |
-| `DB_NAME`         | Database name                       | `cloud-ai`         |
-| `DB_USERNAME`     | Database username                   | `root`             |
-| `DB_PASSWORD`     | Database password                   | `cloud-ai`         |
-| `SERVER_ADDRESS`  | Server address                      | `0.0.0.0`          |
-| `SERVER_PORT`     | Server port                         | `9090`             |
+|------------------|--------------------------------------|--------------------|
+| `SPRING_PROFILE` | Active Spring profile               | `prod`             |
+| `DB_HOST`        | Database hostname                   | `db`               |
+| `DB_PORT`        | Database port                       | `3306`             |
+| `DB_NAME`        | Database name                       | `cloud-ai`         |
+| `DB_USERNAME`    | Database username                   | `root`             |
+| `DB_PASSWORD`    | Database password                   | `cloud-ai`         |
+| `SERVER_ADDRESS` | Server address                      | `0.0.0.0`          |
+| `SERVER_PORT`    | Server port                         | `9090`             |
 
 ---
 
 ## Notes
-- Ensure Docker and Docker Compose are installed on your system.
+- Ensure Docker, Docker Compose, and QEMU are installed on your system.
 - Adjust the environment variables in the `docker-compose.yml` file to match your environment.
 - Use `application-prod.yml` to define the configuration for the `prod` profile.
+- For ARM32v7 systems, test the image on compatible hardware like Raspberry Pi 3 or Zero 2 W.
 
 ---
 
@@ -104,13 +111,13 @@ The `MediaFileController` provides endpoints for managing `MediaFile` entities. 
 
 ### Endpoints
 
-| HTTP Method | Endpoint               | Description                              |
-|-------------|------------------------|------------------------------------------|
-| GET         | `/api/media-files`     | Retrieves all media files with pagination. |
-| GET         | `/api/media-files/{id}`| Retrieves a specific media file by its ID. |
-| POST        | `/api/media-files`     | Creates a new media file.                |
-| PUT         | `/api/media-files`     | Updates an existing media file.          |
-| DELETE      | `/api/media-files/{id}`| Deletes a media file by its ID.          |
+| HTTP Method | Endpoint                | Description                                |
+|-------------|-------------------------|--------------------------------------------|
+| GET         | `/api/media-files`      | Retrieves all media files with pagination. |
+| GET         | `/api/media-files/{id}` | Retrieves a specific media file by its ID. |
+| POST        | `/api/media-files`      | Creates a new media file.                  |
+| PUT         | `/api/media-files`      | Updates an existing media file.            |
+| DELETE      | `/api/media-files/{id}` | Deletes a media file by its ID.            |
 
 ### Notes
 - Replace `{id}` with the UUID of the media file when using the endpoints that require an ID.
@@ -124,18 +131,18 @@ The `MediaFile` entity represents a media file in the system. Below is an overvi
 
 ### Attributes
 
-| Attribute   | Type            | Description                              |
-|-------------|-----------------|------------------------------------------|
-| `id`        | `UUID`          | Unique identifier for the media file.    |
-| `name`      | `String`        | Name of the media file.                  |
-| `type`      | `String`        | Type of the media file (e.g., image, video). |
-| `path`      | `String`        | Path to the media file.                  |
-| `tags`      | `String`        | Tags associated with the media file.     |
-| `createdAt` | `LocalDateTime` | Timestamp when the media file was created. |
+| Attribute   | Type            | Description                                 |
+|-------------|-----------------|---------------------------------------------|
+| `id`        | `UUID`          | Unique identifier for the media file.       |
+| `name`      | `String`        | Name of the media file.                     |
+| `type`      | `String`        | Type of the media file (e.g., image, video).|
+| `path`      | `String`        | Path to the media file.                     |
+| `tags`      | `String`        | Tags associated with the media file.        |
+| `createdAt` | `LocalDateTime` | Timestamp when the media file was created.  |
 | `updatedAt` | `LocalDateTime` | Timestamp when the media file was last updated. |
 
 ### Notes
 - The `id` field is auto-generated and serves as the primary key.
 - The `createdAt` and `updatedAt` fields are automatically managed by the system.
 - The `path` field stores the location of the media file.
-- The `tags` field can be used to categorize or describe the media file.e `content` field stores the raw binary data of the media file.
+- The `tags` field can be used to categorize or describe the media file.
