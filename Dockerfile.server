@@ -1,24 +1,36 @@
 FROM eclipse-temurin:17-jdk AS maven_tool_chain_cache
+
+# Install Maven
 RUN apt-get update && apt-get install -y maven
 
+# Set working directory
 WORKDIR /build
+
+# Copy necessary files for Maven build
 COPY ./server/pom.xml .
-COPY ./server/src ./src/
+COPY ./server/src ./src
 
-RUN mvn dependency:go-offline
-RUN mvn clean package --quiet -DskipTests --batch-mode --fail-fast --no-transfer-progress
+# Build application
+RUN mvn clean package -DskipTests -B
 
+# Final image
 FROM eclipse-temurin:17-jdk
+
+# Set working directory in final image
 WORKDIR /app
-COPY --from=maven_tool_chain_cache /build/target/ ./
 
-ENV SPRING_PROFILE=prod
-ENV DB_HOST=192.168.137.178
-ENV DB_PORT=30050
-ENV DB_NAME=cloud-computing
-ENV DB_USERNAME=root
-ENV DB_PASS=admin
-ENV SERVER_ADDRESS=192.168.137.178
-ENV SERVER_PORT=30070
+# Copy built JAR from previous stage
+COPY --from=maven_tool_chain_cache /build/target/*.jar app.jar
 
-ENTRYPOINT ["java", "-Dspring.profiles.active=${SPRING_PROFILE}", "-jar", "Backend-1.0.0.jar"]
+# Set environment variables
+ENV SPRING_PROFILE=prod \
+    DB_HOST=192.168.137.178 \
+    DB_PORT=30050 \
+    DB_NAME=cloud-computing \
+    DB_USERNAME=root \
+    DB_PASS=admin \
+    SERVER_ADDRESS=192.168.137.178 \
+    SERVER_PORT=30070
+
+# Entry point
+ENTRYPOINT ["sh", "-c", "java -Dspring.profiles.active=$SPRING_PROFILE -jar app.jar"]
