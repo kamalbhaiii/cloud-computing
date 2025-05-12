@@ -6,9 +6,9 @@ from picamera2 import Picamera2
 import time
 
 # Debug: List TPUs
-print("[DEBUG] Listing all tpu(s) connected")
+print("[DEBUG] Listing all TPU(s) connected")
 for i in list_edge_tpus():
-    print(i) 
+    print(i)
 
 # Debug: Print script start
 print("[DEBUG] Starting prediction script...")
@@ -54,6 +54,11 @@ except Exception as e:
     print("[ERROR] Failed to initialize camera:", e)
     exit(1)
 
+# Thresholds
+CONFIDENCE_THRESHOLD = 0.5  # 50% confidence
+OBJECTNESS_THRESHOLD = 0.4  # Minimum objectness score
+CLASS_SCORE_THRESHOLD = 0.4  # Minimum class score
+
 # Main loop
 try:
     while True:
@@ -77,25 +82,43 @@ try:
 
         # Process object detection output
         # Assuming output shape: (1, 8, 8400)
-        # 8 = [x, y, w, h, objectness, class_score_0, class_score_1, class_score_2]
+        # 8 = [x, y, w, h, objectness, class_score_0, class_score_1, class_score_2, class_score_3]
         output = output[0]  # Remove batch dimension: (8, 8400)
         objectness_scores = output[4, :]  # Objectness scores
-        class_scores = output[5:8, :]  # Class scores for 3 classes (adjust if 4)
+        class_scores = output[5:9, :]  # Class scores for 4 classes
 
         # Find detection with highest objectness score
         max_idx = np.argmax(objectness_scores)
         max_objectness = objectness_scores[max_idx]
         print(f"[DEBUG] Highest objectness score: {max_objectness:.4f} at index {max_idx}")
 
+        # Check objectness threshold
+        if max_objectness < OBJECTNESS_THRESHOLD:
+            print("[DEBUG] No detection with sufficient objectness score (>= {:.2f})".format(OBJECTNESS_THRESHOLD))
+            continue
+
         # Get class scores for this detection
         detection_class_scores = class_scores[:, max_idx]
         max_class_idx = np.argmax(detection_class_scores)
         max_class_score = detection_class_scores[max_class_idx]
+        print(f"[DEBUG] Class scores: {detection_class_scores}, Predicted class index: {max_class_idx}")
+
+        # Check class score threshold
+        if max_class_score < CLASS_SCORE_THRESHOLD:
+            print("[DEBUG] No class with sufficient score (>= {:.2f})".format(CLASS_SCORE_THRESHOLD))
+            continue
+
+        # Get predicted label
         predicted_label = labels.get(max_class_idx, "Unknown")
-        print(f"[DEBUG] Class scores: {detection_class_scores}, Predicted class: {predicted_label}")
+        print(f"[DEBUG] Predicted class: {predicted_label}")
+
+        # Calculate combined confidence
+        confidence = max_objectness * max_class_score
+        if confidence < CONFIDENCE_THRESHOLD:
+            print("[DEBUG] Confidence {:.4f} below threshold ({:.2f})".format(confidence, CONFIDENCE_THRESHOLD))
+            continue
 
         # Print prediction
-        confidence = max_objectness * max_class_score  # Combine objectness and class score
         print(f"Predicted: {predicted_label} with Confidence: {confidence:.4f}")
 
         # Debug: Frame rate
