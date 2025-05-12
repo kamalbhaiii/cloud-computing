@@ -21,18 +21,21 @@ except Exception as e:
 
 # Initialize Edge TPU model
 try:
-    interpreter = edgetpu.make_interpreter("best_float32_edgetpu.tflite")
+    interpreter = edgetpu.make_interpreter("float_32_edgetpu.tflite")
     interpreter.allocate_tensors()
     print("[DEBUG] Edge TPU model loaded and tensors allocated")
 except Exception as e:
     print("[ERROR] Failed to load model:", e)
     exit(1)
 
-# Get model input details
+# Get model input and output details
 input_details = interpreter.get_input_details()[0]
 input_shape = input_details['shape']
 height, width = input_shape[1], input_shape[2]
 print(f"[DEBUG] Model expects input shape: {input_shape}")
+
+output_details = interpreter.get_output_details()
+print(f"[DEBUG] Model output details: {output_details}")
 
 # Initialize camera
 try:
@@ -63,14 +66,21 @@ try:
         common.set_input(interpreter, frame)
         interpreter.invoke()
         output = common.output_tensor(interpreter, 0)
-        print("[DEBUG] Inference completed")
+        print(f"[DEBUG] Inference completed, output shape: {output.shape}, output: {output}")
 
-        # Process output
-        scores = output[0]
-        max_score_idx = np.argmax(scores)
-        max_score = scores[max_score_idx]
-        predicted_label = labels.get(max_score_idx, "Unknown")
-        print(f"Predicted: {predicted_label} with Confidence: {max_score:.4f}")
+        # Process output (assuming classification with 4 classes)
+        if len(output.shape) == 1 and output.shape[0] == len(labels):
+            # Classification: 1D array of probabilities or logits
+            scores = output
+            max_score_idx = np.argmax(scores)
+            max_score = scores[max_score_idx]
+            predicted_label = labels.get(max_score_idx, "Unknown")
+            print(f"Predicted: {predicted_label} with Confidence: {max_score:.4f}")
+        else:
+            # Handle unexpected output (e.g., object detection or incorrect shape)
+            print("[ERROR] Unexpected output shape. Expected 1D array with 4 elements.")
+            print(f"[DEBUG] Output shape: {output.shape}, content: {output}")
+            continue
 
         # Debug: Frame rate
         elapsed = time.time() - start_time
