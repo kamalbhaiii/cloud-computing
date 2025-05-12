@@ -1,8 +1,14 @@
 import numpy as np
 from pycoral.utils import edgetpu
 from pycoral.adapters import common
+from pycoral.utils.edgetpu import list_edge_tpus
 from picamera2 import Picamera2
 import time
+
+# Debug: List TPUs
+print("[DEBUG] Listing all tpu(s) connected")
+for i in list_edge_tpus():
+    print(i) 
 
 # Debug: Print script start
 print("[DEBUG] Starting prediction script...")
