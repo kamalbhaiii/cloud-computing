@@ -89,7 +89,7 @@ try:
         inference_start = time.time()
         common.set_input(interpreter, frame_input)
         interpreter.invoke()
-        output = common.output_tensor(interpreter, 0)
+        output = np.copy(common.output_tensor(interpreter, 0))  # Create a deep copy
         inference_time = time.time() - inference_start
         print(f"[DEBUG] Inference completed in {inference_time:.3f}s, output shape: {output.shape}")
 
