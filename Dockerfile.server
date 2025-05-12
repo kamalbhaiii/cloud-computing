@@ -1,26 +1,36 @@
 FROM arm32v7/eclipse-temurin:17-jdk AS maven_tool_chain_cache
 
-# Install wget to download Maven
+# Install wget and clean up
 RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
 
-# Download and install a specific version of Maven
+# Download and install Maven
 ENV MAVEN_VERSION=3.9.6
 RUN wget --no-verbose -O /tmp/apache-maven.tar.gz https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz && \
     tar -xzf /tmp/apache-maven.tar.gz -C /opt && \
     ln -s /opt/apache-maven-${MAVEN_VERSION} /opt/maven && \
-    rm /tmp/apache-maven.tar.gz
+    rm /tmp/apache-maven.tar.gz && \
+    chmod -R 755 /opt/maven
 
 # Set Maven environment variables
 ENV MAVEN_HOME=/opt/maven
 ENV PATH=${MAVEN_HOME}/bin:${PATH}
 
+# Verify Maven installation
+RUN mvn --version || { echo "Maven installation failed"; exit 1; }
+
 WORKDIR /build
 COPY ./server/pom.xml .
 COPY ./server/src ./src/
 
-# Run Maven commands
-RUN mvn dependency:go-offline
-RUN mvn clean package --quiet -DskipTests --batch-mode --fail-fast --no-transfer-progress
+# Add Maven wrapper as a fallback
+COPY ./server/mvnw ./mvnw
+COPY ./server/.mvn ./.mvn
+RUN chmod +x ./mvnw
+
+# Run Maven commands (try mvnw as fallback)
+RUN mvn dependency:go-offline || ./mvnw dependency:go-offline
+RUN mvn clean package --quiet -DskipTests --batch-mode --fail-fast --no-transfer-progress || \
+    ./mvnw clean package --quiet -DskipTests --batch-mode --fail-fast --no-transfer-progress
 
 FROM arm32v7/eclipse-temurin:17-jdk
 WORKDIR /app
