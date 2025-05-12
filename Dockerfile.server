@@ -10,7 +10,7 @@ COPY ./server/ .
 RUN mvn clean package -DskipTests
 
 # Use a lightweight JDK image for running the app
-FROM eclipse-temurin:17-jdk-alpine
+FROM eclipse-temurin:17-jdk
 
 WORKDIR /app
 
