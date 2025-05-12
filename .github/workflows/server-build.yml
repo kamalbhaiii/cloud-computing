@@ -82,10 +82,10 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/cloud-computing-server:${{ steps.generate_tag.outputs.tag }}
 
-      - name: Update server.yaml
+      - name: Update Server.yaml
         if: steps.check_changes.outputs.changes_detected == 'true'
         run: |
-          sed -i "s|image: ${{ secrets.DOCKER_HUB_USERNAME }}/cloud-computing-server:.*|image: ${{ secrets.DOCKER_HUB_USERNAME }}/cloud-computing-server:${{ steps.generate_tag.outputs.tag }}|" k3s/server.yaml
+          sed -i "s|image: ${{ secrets.DOCKER_HUB_USERNAME }}/cloud-computing-server:.*|image: ${{ secrets.DOCKER_HUB_USERNAME }}/cloud-computing-server:${{ steps.generate_tag.outputs.tag }}|" k3s/Server.yaml
           git config --global user.name 'GitHub Action'
           git config --global user.email 'action@github.com'
           git add k3s/server.yaml
