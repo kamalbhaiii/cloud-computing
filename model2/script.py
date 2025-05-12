@@ -65,22 +65,32 @@ try:
         # Run inference
         common.set_input(interpreter, frame)
         interpreter.invoke()
-        output = common.output_tensor(interpreter, 0)
-        print(f"[DEBUG] Inference completed, output shape: {output.shape}, output: {output}")
+        # Copy output to avoid holding reference to internal tensor
+        output = np.copy(common.output_tensor(interpreter, 0))
+        print(f"[DEBUG] Inference completed, output shape: {output.shape}")
 
-        # Process output (assuming classification with 4 classes)
-        if len(output.shape) == 1 and output.shape[0] == len(labels):
-            # Classification: 1D array of probabilities or logits
-            scores = output
-            max_score_idx = np.argmax(scores)
-            max_score = scores[max_score_idx]
-            predicted_label = labels.get(max_score_idx, "Unknown")
-            print(f"Predicted: {predicted_label} with Confidence: {max_score:.4f}")
-        else:
-            # Handle unexpected output (e.g., object detection or incorrect shape)
-            print("[ERROR] Unexpected output shape. Expected 1D array with 4 elements.")
-            print(f"[DEBUG] Output shape: {output.shape}, content: {output}")
-            continue
+        # Process object detection output
+        # Assuming output shape: (1, 8, 8400)
+        # 8 = [x, y, w, h, objectness, class_score_0, class_score_1, class_score_2]
+        output = output[0]  # Remove batch dimension: (8, 8400)
+        objectness_scores = output[4, :]  # Objectness scores
+        class_scores = output[5:8, :]  # Class scores for 3 classes (adjust if 4)
+
+        # Find detection with highest objectness score
+        max_idx = np.argmax(objectness_scores)
+        max_objectness = objectness_scores[max_idx]
+        print(f"[DEBUG] Highest objectness score: {max_objectness:.4f} at index {max_idx}")
+
+        # Get class scores for this detection
+        detection_class_scores = class_scores[:, max_idx]
+        max_class_idx = np.argmax(detection_class_scores)
+        max_class_score = detection_class_scores[max_class_idx]
+        predicted_label = labels.get(max_class_idx, "Unknown")
+        print(f"[DEBUG] Class scores: {detection_class_scores}, Predicted class: {predicted_label}")
+
+        # Print prediction
+        confidence = max_objectness * max_class_score  # Combine objectness and class score
+        print(f"Predicted: {predicted_label} with Confidence: {confidence:.4f}")
 
         # Debug: Frame rate
         elapsed = time.time() - start_time
