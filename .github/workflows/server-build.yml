@@ -88,6 +88,6 @@ jobs:
           sed -i "s|image: ${{ secrets.DOCKER_HUB_USERNAME }}/cloud-computing-server:.*|image: ${{ secrets.DOCKER_HUB_USERNAME }}/cloud-computing-server:${{ steps.generate_tag.outputs.tag }}|" k3s/Server.yaml
           git config --global user.name 'GitHub Action'
           git config --global user.email 'action@github.com'
-          git add k3s/server.yaml
+          git add k3s/Server.yaml
           git commit -m "Update server.yaml with new Docker image tag"
           git push
