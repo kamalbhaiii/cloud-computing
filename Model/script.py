@@ -49,7 +49,7 @@ print(f"[DEBUG] Model output details: {output_details}")
 # Initialize camera
 try:
     picam2 = Picamera2()
-    config = picam2.create_preview_configuration(main={"size": (width, height)})
+    config = picam2.create_preview_configuration(main={"size": (width, height), "format": "RGB888"})
     picam2.configure(config)
     picam2.start()
     print("[DEBUG] Camera initialized and started")
@@ -72,74 +72,73 @@ print("[DEBUG] MinIO uploader process started")
 # Main loop
 try:
     while True:
-        # Capture frame
         start_time = time.time()
+
+        # Capture frame
+        capture_start = time.time()
         frame = picam2.capture_array()
-        print("[DEBUG] Frame captured")
+        capture_time = time.time() - capture_start
+        print(f"[DEBUG] Frame captured in {capture_time:.3f} seconds")
 
         # Preprocess frame
+        preprocess_start = time.time()
         frame = frame[:height, :width, :3]  # Ensure RGB and correct size
-        frame = frame.astype(np.float32)
-        frame = np.expand_dims(frame, axis=0)  # Add batch dimension
-        print("[DEBUG] Frame preprocessed")
+        frame_input = frame.astype(np.float32)
+        frame_input = np.expand_dims(frame_input, axis=0)  # Add batch dimension
+        preprocess_time = time.time() - preprocess_start
+        print(f"[DEBUG] Frame preprocessed in {preprocess_time:.3f} seconds")
 
         # Run inference
-        common.set_input(interpreter, frame)
+        inference_start = time.time()
+        common.set_input(interpreter, frame_input)
         interpreter.invoke()
-        # Copy output to avoid holding reference to internal tensor
         output = np.copy(common.output_tensor(interpreter, 0))
-        print(f"[DEBUG] Inference completed, output shape: {output.shape}")
+        inference_time = time.time() - inference_start
+        print(f"[DEBUG] Inference completed in {inference_time:.3f} seconds, output shape: {output.shape}")
 
-        # Process object detection output
-        # Assuming output shape: (1, 8, 8400)
-        # 8 = [x, y, w, h, objectness, class_score_0, class_score_1, class_score_2, class_score_3]
+        # Process output
+        process_start = time.time()
         output = output[0]  # Remove batch dimension: (8, 8400)
         objectness_scores = output[4, :]  # Objectness scores
-        class_scores = output[5:9, :]  # Class scores for 4 classes
+        class_scores = output[5:8, :]  # Class scores for 3 classes
         box_coords = output[0:4, :]  # Bounding box coordinates: x, y, w, h
 
-        # Find detection with highest objectness score
         max_idx = np.argmax(objectness_scores)
         max_objectness = objectness_scores[max_idx]
-        print(f"[DEBUG] Highest objectness score: {max_objectness:.4f} at index {max_idx}")
+        # print(f"[DEBUG] Highest objectness score: {max_objectness:.4f} at index {max_idx}")
 
-        # Check objectness threshold
         if max_objectness < OBJECTNESS_THRESHOLD:
-            print("[DEBUG] No detection with sufficient objectness score (>= {:.2f})".format(OBJECTNESS_THRESHOLD))
+            # print("[DEBUG] No detection with sufficient objectness score (>= {:.2f})".format(OBJECTNESS_THRESHOLD))
             continue
 
-        # Get class scores for this detection
         detection_class_scores = class_scores[:, max_idx]
         max_class_idx = np.argmax(detection_class_scores)
         max_class_score = detection_class_scores[max_class_idx]
-        print(f"[DEBUG] Class scores: {detection_class_scores}, Predicted class index: {max_class_idx}")
+        # print(f"[DEBUG] Class scores: {detection_class_scores}, Predicted class index: {max_class_idx}")
 
-        # Check class score threshold
         if max_class_score < CLASS_SCORE_THRESHOLD:
-            print("[DEBUG] No class with sufficient score (>= {:.2f})".format(CLASS_SCORE_THRESHOLD))
+            # print("[DEBUG] No class with sufficient score (>= {:.2f})".format(CLASS_SCORE_THRESHOLD))
             continue
 
-        # Get predicted label
         predicted_label = labels.get(max_class_idx, "Unknown")
-        print(f"[DEBUG] Predicted class: {predicted_label}")
+        # print(f"[DEBUG] Predicted class: {predicted_label}")
 
-        # Calculate combined confidence
         confidence = max_objectness * max_class_score
         if confidence < CONFIDENCE_THRESHOLD:
-            print("[DEBUG] Confidence {:.4f} below threshold ({:.2f})".format(confidence, CONFIDENCE_THRESHOLD))
+            # print("[DEBUG] Confidence {:.4f} below threshold ({:.2f})".format(confidence, CONFIDENCE_THRESHOLD))
             continue
 
-        # Print prediction
         print(f"Predicted: {predicted_label} with Confidence: {confidence:.4f}")
+        process_time = time.time() - process_start
+        print(f"[DEBUG] Output processed in {process_time:.3f} seconds")
 
-        # Get bounding box coordinates
+        # Draw bounding box
+        draw_start = time.time()
         x, y, w, h = box_coords[:, max_idx]
-        print(f"[DEBUG] Bounding box coords: x={x:.2f}, y={y:.2f}, w={w:.2f}, h={h:.2f}")
+        # print(f"[DEBUG] Bounding box coords: x={x:.2f}, y={y:.2f}, w={w:.2f}, h={h:.2f}")
 
-        # Draw bounding box and label on the image
-        frame_rgb = picam2.capture_array()[:height, :width, :3]  # Capture fresh frame
         try:
-            image = Image.fromarray(frame_rgb.astype(np.uint8))
+            image = Image.fromarray(frame.astype(np.uint8))
             draw = ImageDraw.Draw(image)
 
             # Assume coordinates are normalized (0-1); scale to image size
@@ -148,42 +147,39 @@ try:
             x2 = int(x * width + w * width / 2)
             y2 = int(y * height + h * height / 2)
 
-            # Ensure coordinates are within image bounds
             x1, y1 = max(0, x1), max(0, y1)
             x2, y2 = min(width - 1, x2), min(height - 1, y2)
-            print(f"[DEBUG] Scaled bounding box: ({x1}, {y1}, {x2}, {y2})")
+            # print(f"[DEBUG] Scaled bounding box: ({x1}, {y1}, {x2}, {y2})")
 
-            # Draw rectangle
             draw.rectangle((x1, y1, x2, y2), outline="red", width=2)
 
-            # Draw label with confidence
             label_text = f"{predicted_label}: {confidence:.4f}"
-            try:
-                font = ImageFont.truetype("DejaVuSans.ttf", 16)
-            except IOError:
-                font = ImageFont.load_default()
+            font = ImageFont.load_default()  # Use default font for speed
             draw.text((x1, y1 - 20), label_text, fill="red", font=font)
-            print("[DEBUG] Bounding box and label drawn")
+            # print("[DEBUG] Bounding box and label drawn")
 
-            # Convert back to numpy array for queue
             frame_rgb = np.array(image)
         except Exception as e:
             print("[ERROR] Failed to draw bounding box: {}".format(e))
             continue
+        draw_time = time.time() - draw_start
+        print(f"[DEBUG] Bounding box drawn in {draw_time:.3f} seconds")
 
         # Send detection to upload queue
+        queue_start = time.time()
         upload_queue.put((frame_rgb, predicted_label, confidence))
-        print("[DEBUG] Detection with bounding box sent to upload queue")
+        queue_time = time.time() - queue_start
+        print(f"[DEBUG] Detection sent to upload queue in {queue_time:.3f} seconds")
 
-        # Debug: Frame rate
-        elapsed = time.time() - start_time
-        print(f"[DEBUG] Frame processed in {elapsed:.3f} seconds")
+        # Total frame time
+        total_time = time.time() - start_time
+        print(f"[DEBUG] Frame processed in {total_time:.3f} seconds")
 
 except KeyboardInterrupt:
     print("[DEBUG] Stopping script...")
 finally:
     picam2.stop()
     picam2.close()
-    upload_queue.put(None)  # Signal uploader to stop
+    upload_queue.put(None)
     uploader_process.join()
     print("[DEBUG] Camera stopped, uploader process terminated, and resources released")
