@@ -55,8 +55,10 @@ except Exception as e:
     print("[ERROR] Failed to initialize camera:", e)
     exit(1)
 
-# Threshold
+# Thresholds
 CONFIDENCE_THRESHOLD = 0.5  # Configurable, 50%
+OBJECTNESS_THRESHOLD = 0.4  # Minimum objectness score
+CLASS_SCORE_THRESHOLD = 0.4  # Minimum class score
 
 # Start MinIO uploader process
 upload_queue = Queue()
@@ -89,24 +91,44 @@ try:
         interpreter.invoke()
         output = common.output_tensor(interpreter, 0)
         inference_time = time.time() - inference_start
-        print(f"[DEBUG] Inference completed in {inference_time:.3f}s")
+        print(f"[DEBUG] Inference completed in {inference_time:.3f}s, output shape: {output.shape}")
 
         # Process output
         process_start = time.time()
-        class_scores = output[0]  # Assuming classification output
-        max_idx = np.argmax(class_scores)
-        confidence = class_scores[max_idx]
+        output = output[0]  # Remove batch dimension, e.g., shape (9, 8079)
+        objectness_scores = output[4, :]  # Objectness scores
+        class_scores = output[5:9, :]  # Class scores for 4 classes (cat, dog, bird, person)
+
+        max_idx = np.argmax(objectness_scores)
+        max_objectness = objectness_scores[max_idx]
+        print(f"[DEBUG] Highest objectness score: {max_objectness:.4f} at index {max_idx}")
+
+        if max_objectness < OBJECTNESS_THRESHOLD:
+            print(f"[DEBUG] No detection with objectness >= {OBJECTNESS_THRESHOLD}")
+            continue
+
+        detection_class_scores = class_scores[:, max_idx]
+        max_class_idx = np.argmax(detection_class_scores)
+        max_class_score = detection_class_scores[max_class_idx]
+        print(f"[DEBUG] Class scores: {detection_class_scores}, Predicted class index: {max_class_idx}")
+
+        if max_class_score < CLASS_SCORE_THRESHOLD:
+            print(f"[DEBUG] No class with score >= {CLASS_SCORE_THRESHOLD}")
+            continue
+
+        predicted_label = labels.get(max_class_idx, "Unknown")
+        confidence = max_objectness * max_class_score
+
+        if confidence < CONFIDENCE_THRESHOLD:
+            print(f"[DEBUG] Confidence {confidence:.4f} below threshold {CONFIDENCE_THRESHOLD}")
+            continue
+
+        print(f"Predicted: {predicted_label} with Confidence: {confidence:.4f}")
+        upload_queue.put((frame, predicted_label, confidence))
+        print("[DEBUG] Detection queued for upload")
+
         process_time = time.time() - process_start
         print(f"[DEBUG] Output processed in {process_time:.3f}s")
-
-        # Check threshold and output
-        if confidence >= CONFIDENCE_THRESHOLD:
-            label = labels.get(max_idx, "Unknown")
-            print(f"Predicted: {label} with Confidence: {confidence:.4f}")
-            upload_queue.put((frame, label, confidence))
-            print("[DEBUG] Detection queued for upload")
-        else:
-            print(f"[DEBUG] Confidence {confidence:.4f} below threshold {CONFIDENCE_THRESHOLD}")
 
         total_time = time.time() - start_time
         print(f"[DEBUG] Frame processed in {total_time:.3f}s\n")
