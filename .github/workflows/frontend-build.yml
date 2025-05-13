@@ -76,3 +76,14 @@ jobs:
           git add k3s/Frontend.yaml
           git commit -m "Update Frontend.yaml with new Docker image tag"
           git push
+
+      - name: Send notification to Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          MESSAGE="🚀 *Workflow Notice* 🚀%0AFrontend workflow execution is completed and the Frontend.yaml (K3s manifests) have changes.%0AYou can now trigger the Jenkins build on Master Node.🛠️"
+          curl -s -X POST https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage \
+            -d chat_id=${TELEGRAM_CHAT_ID} \
+            -d text="$MESSAGE" \
+            -d parse_mode=Markdown
