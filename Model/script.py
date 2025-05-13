@@ -6,6 +6,7 @@ from picamera2 import Picamera2
 import time
 from multiprocessing import Process, Queue
 import minio_uploader
+import telegram_notifier
 
 # Debug: List connected TPUs
 print("[DEBUG] Listing connected Edge TPUs")
@@ -62,6 +63,12 @@ CLASS_SCORE_THRESHOLD = 0.4  # Minimum class score
 
 # Start MinIO uploader process
 upload_queue = Queue()
+TELEGRAM_TOKEN = "7684579144:AAGOhHlKZ9IEKHiCHD9gBT1eE3OgfdNC7no"
+TELEGRAM_USER_ID = "72461397281"
+telegram_process = Process(target=telegram_notifier.telegram_notifier, args=(upload_queue, TELEGRAM_TOKEN, TELEGRAM_USER_ID))
+telegram_process.daemon = True
+telegram_process.start()
+print("[DEBUG] Telegram notifier process started")
 uploader_process = Process(target=minio_uploader.upload_to_minio, args=(upload_queue,))
 uploader_process.daemon = True
 uploader_process.start()
@@ -140,4 +147,5 @@ finally:
     picam2.close()
     upload_queue.put(None)
     uploader_process.join()
+    telegram_process.join()
     print("[DEBUG] Cleanup complete")
