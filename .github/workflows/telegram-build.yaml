@@ -6,12 +6,24 @@ on:
       - master
     paths:
       - 'k3s/**'
+  workflow_run:
+    workflows: ["frontend-build.yml", "server-build.yml"]
+    types:
+      - completed
 
 jobs:
   notify-telegram:
+    if: ${{ github.event_name == 'push' || (github.event.workflow_run.conclusion == 'success') }}
     runs-on: ubuntu-latest
     steps:
+      - name: Check if k3s/ was modified
+        id: k3s_check
+        run: |
+          git fetch origin master
+          git diff --name-only origin/master HEAD | grep '^k3s/' || echo "NO_MATCH" > changed.txt
+
       - name: Send notification to Telegram
+        if: steps.k3s_check.outcome == 'success'
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
