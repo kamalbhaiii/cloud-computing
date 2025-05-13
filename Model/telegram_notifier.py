@@ -2,36 +2,61 @@ import requests
 import cv2
 import tempfile
 import os
+import logging
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler("telegram_notifier.log")
+    ]
+)
 
 def send_telegram_message(bot_token, user_id, message, image=None):
+    """Send Telegram message and optional image."""
     try:
         # Send text message
-        requests.post(
+        response = requests.post(
             f"https://api.telegram.org/bot{bot_token}/sendMessage",
-            data={"chat_id": user_id, "text": message, "parse_mode": "HTML"}
+            data={"chat_id": user_id, "text": message, "parse_mode": "HTML"},
+            timeout=5
         )
+        logging.debug(f"Text message response: {response.status_code}, {response.json()}")
+        if response.status_code != 200:
+            logging.error(f"Failed to send text message: {response.json()}")
 
         # Send photo if provided
         if image is not None:
             with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
-                cv2.imwrite(temp_file.name, image)
+                cv2.imwrite(temp_file.name, cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+                logging.debug(f"Image saved to {temp_file.name}")
                 with open(temp_file.name, 'rb') as img_file:
-                    requests.post(
+                    response = requests.post(
                         f"https://api.telegram.org/bot{bot_token}/sendPhoto",
                         data={"chat_id": user_id},
-                        files={"photo": img_file}
+                        files={"photo": img_file},
+                        timeout=5
                     )
+                    logging.debug(f"Photo response: {response.status_code}, {response.json()}")
+                    if response.status_code != 200:
+                        logging.error(f"Failed to send photo: {response.json()}")
                 os.unlink(temp_file.name)
     except Exception as e:
-        print(f"[ERROR] Failed to send Telegram notification: {e}")
-
+        logging.error(f"Failed to send Telegram notification: {e}")
 
 def telegram_notifier(queue, bot_token, user_id):
-    print("[DEBUG] Telegram notifier started")
-    while True:
-        item = queue.get()
-        if item is None:
-            print("[DEBUG] Telegram notifier stopping...")
-            break
-        frame, message, predicted_label, confidence = item
-        send_telegram_message(bot_token, user_id, message, image=frame)
+    """Process queue items and send Telegram notifications."""
+    logging.info(f"Telegram notifier started, PID: {os.getpid()}")
+    try:
+        while True:
+            item = queue.get()
+            if item is None:
+                logging.info("Telegram notifier stopping...")
+                break
+            logging.debug(f"Queue item: {item}")
+            frame, message, predicted_label, confidence = item
+            send_telegram_message(bot_token, user_id, message, image=frame)
+    except Exception as e:
+        logging.error(f"Telegram notifier crashed: {e}")
+        raise

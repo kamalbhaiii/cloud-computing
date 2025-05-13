@@ -1,18 +1,28 @@
 import os
-from minio import Minio # type: ignore
-from minio.error import S3Error # type: ignore
+from minio import Minio
+from minio.error import S3Error
 from PIL import Image
 import numpy as np
-import time
 from datetime import datetime
+import logging
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler("minio_uploader.log")
+    ]
+)
 
 def upload_to_minio(queue):
+    """Upload images from queue to MinIO."""
     # MinIO configuration
     minio_client = Minio(
         "192.168.137.178:30010",
-        access_key="UAW9vG03CEqhmAJoOaff",  # Replace with your MinIO access key
-        secret_key="ZDCoFLJDLQPw848mbxZ7KAYUrCoY88MsHEoC40qk",  # Replace with your MinIO secret key
-        secure=False  # Set to True if using HTTPS
+        access_key="UAW9vG03CEqhmAJoOaff",
+        secret_key="ZDCoFLJDLQPw848mbxZ7KAYUrCoY88MsHEoC40qk",
+        secure=False
     )
     bucket_name = "wildlife-detections"
 
@@ -20,27 +30,27 @@ def upload_to_minio(queue):
     try:
         if not minio_client.bucket_exists(bucket_name):
             minio_client.make_bucket(bucket_name)
-            print("[DEBUG] Created MinIO bucket:", bucket_name)
+            logging.info(f"Created MinIO bucket: {bucket_name}")
         else:
-            print("[DEBUG] MinIO bucket already exists:", bucket_name)
+            logging.info(f"MinIO bucket already exists: {bucket_name}")
     except S3Error as e:
-        print("[ERROR] Failed to create/check MinIO bucket:", e)
+        logging.error(f"Failed to create/check MinIO bucket: {e}")
         return
 
     # Create temporary directory for images
     temp_dir = "temp_images_ignore"
     os.makedirs(temp_dir, exist_ok=True)
-    print("[DEBUG] Temporary image directory created:", temp_dir)
+    logging.info(f"Temporary image directory created: {temp_dir}")
 
     # Process queue
     while True:
         item = queue.get()
         if item is None:
-            print("[DEBUG] Received stop signal, exiting uploader")
+            logging.info("Received stop signal, exiting uploader")
             break
 
         frame, message, label, confidence = item
-        print("[DEBUG] Received detection from queue: label={}, confidence={:.4f}".format(label, confidence))
+        logging.debug(f"Received detection: label={label}, confidence={confidence:.4f}")
 
         # Generate unique filename
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
@@ -51,21 +61,21 @@ def upload_to_minio(queue):
         try:
             image = Image.fromarray(frame.astype(np.uint8))
             image.save(temp_path, "JPEG")
-            print("[DEBUG] Image saved locally:", temp_path)
+            logging.debug(f"Image saved locally: {temp_path}")
         except Exception as e:
-            print("[ERROR] Failed to save image {}: {}".format(temp_path, e))
+            logging.error(f"Failed to save image {temp_path}: {e}")
             continue
 
         # Upload to MinIO
         try:
             minio_client.fput_object(bucket_name, filename, temp_path)
-            print("[DEBUG] Uploaded image to MinIO: {}/{}".format(bucket_name, filename))
+            logging.debug(f"Uploaded image to MinIO: {bucket_name}/{filename}")
         except S3Error as e:
-            print("[ERROR] Failed to upload image {} to MinIO: {}".format(filename, e))
+            logging.error(f"Failed to upload image {filename} to MinIO: {e}")
         finally:
             # Clean up temporary file
             try:
                 os.remove(temp_path)
-                print("[DEBUG] Deleted temporary image:", temp_path)
+                logging.debug(f"Deleted temporary image: {temp_path}")
             except OSError as e:
-                print("[ERROR] Failed to delete temporary image {}: {}".format(temp_path, e))
+                logging.error(f"Failed to delete temporary image {temp_path}: {e}")
