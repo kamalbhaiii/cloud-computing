@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - telegram-bot
     paths:
       - 'k3s/**'
 
