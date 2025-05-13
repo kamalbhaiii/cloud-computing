@@ -4,15 +4,6 @@ import tempfile
 import os
 import logging
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler("telegram_notifier.log")
-    ]
-)
-
 def send_telegram_message(bot_token, user_id, message, image=None):
     """Send Telegram message and optional image."""
     try:

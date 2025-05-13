@@ -14,17 +14,34 @@ import minio_uploader
 def setup_logging(mode):
     """Configure logging based on mode (Normal/Debug)."""
     log_level = logging.DEBUG if mode == "debug" else logging.INFO
-    logging.basicConfig(
-        level=log_level,
-        format="%(asctime)s [%(levelname)s] %(message)s",
-        handlers=[
-            logging.StreamHandler(sys.stdout),
-            logging.FileHandler("wildlife_detection.log")
-        ]
-    )
-    logger = logging.getLogger()
-    logger.info(f"Starting script in {mode} mode")
-    return logger
+    
+    # Clear any existing handlers to prevent duplicates
+    root_logger = logging.getLogger()
+    for handler in root_logger.handlers[:]:
+        root_logger.removeHandler(handler)
+    
+    # Create handlers
+    stream_handler = logging.StreamHandler(sys.stdout)
+    stream_handler.setLevel(log_level)
+    file_handler = logging.FileHandler("wildlife_detection.log")
+    file_handler.setLevel(log_level)
+    
+    # Define format
+    formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
+    stream_handler.setFormatter(formatter)
+    file_handler.setFormatter(formatter)
+    
+    # Configure root logger
+    root_logger.setLevel(log_level)
+    root_logger.addHandler(stream_handler)
+    root_logger.addHandler(file_handler)
+    
+    # Ensure child loggers propagate to root
+    logging.getLogger('telegram_notifier').propagate = True
+    logging.getLogger('minio_uploader').propagate = True
+    
+    root_logger.info(f"Starting script in {mode} mode")
+    return root_logger
 
 def load_labels(label_file):
     """Load labelmap from file."""
@@ -155,7 +172,7 @@ def main():
     LABEL_FILE = "labelmap.txt"
     MODEL_FILE = "best_int8_edgetpu.tflite"
     TELEGRAM_TOKEN = "7684579144:AAGOhHlKZ9IEKHiCHD9gBT1eE3OgfdNC7no"
-    TELEGRAM_USER_ID = "7246139728"
+    TELEGRAM_USER_ID = "72461397281"
     THRESHOLDS = {
         "confidence": 0.5,
         "objectness": 0.4,

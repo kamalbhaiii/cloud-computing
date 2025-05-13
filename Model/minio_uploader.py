@@ -6,15 +6,6 @@ import numpy as np
 from datetime import datetime
 import logging
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler("minio_uploader.log")
-    ]
-)
-
 def upload_to_minio(queue):
     """Upload images from queue to MinIO."""
     # MinIO configuration
