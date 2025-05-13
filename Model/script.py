@@ -131,7 +131,8 @@ try:
             continue
 
         print(f"Predicted: {predicted_label} with Confidence: {confidence:.4f}")
-        upload_queue.put((frame, predicted_label, confidence))
+        message=f"Predicted: {predicted_label} with Confidence: {confidence:.4f}"
+        upload_queue.put((frame, message, predicted_label, confidence))
         print("[DEBUG] Detection queued for upload")
 
         process_time = time.time() - process_start

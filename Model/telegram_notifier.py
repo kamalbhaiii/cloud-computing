@@ -33,5 +33,5 @@ def telegram_notifier(queue, bot_token, user_id):
         if item is None:
             print("[DEBUG] Telegram notifier stopping...")
             break
-        frame, message, confidence = item
+        frame, message, predicted_label, confidence = item
         send_telegram_message(bot_token, user_id, message, image=frame)
