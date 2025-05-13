@@ -39,7 +39,7 @@ def upload_to_minio(queue):
             print("[DEBUG] Received stop signal, exiting uploader")
             break
 
-        frame, label, confidence = item
+        frame, message, label, confidence = item
         print("[DEBUG] Received detection from queue: label={}, confidence={:.4f}".format(label, confidence))
 
         # Generate unique filename
