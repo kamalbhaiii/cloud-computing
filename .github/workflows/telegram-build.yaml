@@ -1,0 +1,24 @@
+name: Notify Telegram on k3s Directory Change
+
+on:
+  push:
+    branches:
+      - master
+      - telegram-bot
+    paths:
+      - 'k3s/**'
+
+jobs:
+  notify-telegram:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send notification to Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          MESSAGE="🚀 *Workflow Notice* 🚀%0AAll the workflow executions are complete.%0AYou can now trigger the Jenkins build. 🛠️"
+          curl -s -X POST https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage \
+            -d chat_id=${TELEGRAM_CHAT_ID} \
+            -d text="$MESSAGE" \
+            -d parse_mode=Markdown
