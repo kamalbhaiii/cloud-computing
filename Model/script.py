@@ -172,7 +172,7 @@ def main():
     LABEL_FILE = "labelmap.txt"
     MODEL_FILE = "best_int8_edgetpu.tflite"
     TELEGRAM_TOKEN = "7684579144:AAGOhHlKZ9IEKHiCHD9gBT1eE3OgfdNC7no"
-    TELEGRAM_USER_ID = "7246139728"
+    TELEGRAM_USER_ID = ["7246139728", "1411517116", "1112158483"]
     THRESHOLDS = {
         "confidence": 0.5,
         "objectness": 0.4,
