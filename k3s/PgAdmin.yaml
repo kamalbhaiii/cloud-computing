@@ -1,0 +1,87 @@
+# ConfigMap for pgAdmin 4 initial configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pgadmin-config
+  namespace: default
+data:
+  pgadmin.env: |
+    PGADMIN_DEFAULT_EMAIL=admin@pgadmin.com
+    PGADMIN_DEFAULT_PASSWORD=admin
+    PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION=True
+    PGADMIN_CONFIG_CONSOLE_LOG_LEVEL=30
+
+---
+
+# Deployment for pgAdmin 4
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pgadmin
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pgadmin
+  template:
+    metadata:
+      labels:
+        app: pgadmin
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: worker-node-5
+      containers:
+      - name: pgadmin
+        image: dpage/pgadmin4:latest
+        ports:
+        - containerPort: 80  # pgAdmin 4 web interface port
+        resources:
+          limits:
+            memory: "300Mi"  # Limit to 300MB for pgAdmin
+            cpu: "500m"
+          requests:
+            memory: "200Mi"
+            cpu: "200m"
+        env:
+        - name: PGADMIN_DEFAULT_EMAIL
+          valueFrom:
+            configMapKeyRef:
+              name: pgadmin-config
+              key: pgadmin.env
+              optional: true
+        - name: PGADMIN_DEFAULT_PASSWORD
+          valueFrom:
+            configMapKeyRef:
+              name: pgadmin-config
+              key: pgadmin.env
+              optional: true
+        volumeMounts:
+        - name: pgadmin-config
+          mountPath: "/pgadmin4/config_local.py"
+          subPath: pgadmin.env
+      volumes:
+      - name: pgadmin-config
+        configMap:
+          name: pgadmin-config
+          items:
+          - key: pgadmin.env
+            path: pgadmin.env
+
+---
+
+# Service for pgAdmin 4
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgadmin-service
+  namespace: default
+spec:
+  selector:
+    app: pgadmin
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+    nodePort: 30051
+  type: NodePort
