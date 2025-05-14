@@ -6,7 +6,7 @@ metadata:
   namespace: default
 data:
   pgadmin.env: |
-    PGADMIN_DEFAULT_EMAIL=admin@pgadmin.com
+    PGADMIN_DEFAULT_EMAIL=kamal5201ks@gmail.com
     PGADMIN_DEFAULT_PASSWORD=admin
     PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION=True
     PGADMIN_CONFIG_CONSOLE_LOG_LEVEL=30
@@ -83,5 +83,5 @@ spec:
   - protocol: TCP
     port: 80
     targetPort: 80
-    nodePort: 30051
+    nodePort: 30060
   type: NodePort
