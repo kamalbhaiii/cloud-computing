@@ -25,7 +25,7 @@ def send_telegram_message(bot_token, user_ids, message, image=None):
                     with open(temp_file.name, 'rb') as img_file:
                         response = requests.post(
                             f"https://api.telegram.org/bot{bot_token}/sendPhoto",
-                            data={"chat_id": user_id},
+                            data={"chat_id": id},
                             files={"photo": img_file},
                             timeout=5
                         )
