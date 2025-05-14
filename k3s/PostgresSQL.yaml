@@ -1,0 +1,142 @@
+# ConfigMap for PostgreSQL configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgresql-config
+  namespace: default
+data:
+  postgresql.conf: |
+    listen_addresses = '*'  # Allow connections from any IP for Spring Boot on different node
+    port = 5432
+    max_connections = 100
+    shared_buffers = 128MB
+    log_connections = on
+  init.sql: |
+    -- Create a superuser with all privileges
+    CREATE USER springboot WITH ENCRYPTED PASSWORD 'admin';
+    ALTER USER springboot WITH SUPERUSER CREATEDB CREATEROLE LOGIN;
+    -- Create a database for the Spring Boot application
+    CREATE DATABASE appdb;
+    GRANT ALL PRIVILEGES ON DATABASE appdb TO springboot;
+
+---
+
+# PersistentVolume for PostgreSQL data
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgresql-pv
+  namespace: default
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/postgres-data"  # Updated path for PostgreSQL data
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - worker-node-5
+
+---
+
+# PersistentVolumeClaim for PostgreSQL
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgresql-pvc
+  namespace: default
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  selector:
+    matchLabels:
+      type: local
+
+---
+
+# Deployment for PostgreSQL
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgresql
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgresql
+  template:
+    metadata:
+      labels:
+        app: postgresql
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: worker-node-5
+      containers:
+      - name: postgresql
+        image: postgres:latest
+        env:
+        - name: POSTGRES_USER
+          value: "springboot"  # Superuser for Spring Boot
+        - name: POSTGRES_PASSWORD
+          value: "admin"  # Password for the superuser
+        - name: POSTGRES_DB
+          value: "appdb"  # Default database for the application
+        ports:
+        - containerPort: 5432  # PostgreSQL default port
+        volumeMounts:
+        - name: postgresql-storage
+          mountPath: "/var/lib/postgresql/data"  # PostgreSQL data directory
+        - name: postgresql-config
+          mountPath: "/etc/postgresql/postgresql.conf"  # Mount config file
+          subPath: postgresql.conf
+        - name: postgresql-init
+          mountPath: "/docker-entrypoint-initdb.d/init.sql"  # Mount init script
+          subPath: init.sql
+      volumes:
+      - name: postgresql-storage
+        persistentVolumeClaim:
+          claimName: postgresql-pvc
+      - name: postgresql-config
+        configMap:
+          name: postgresql-config
+          items:
+          - key: postgresql.conf
+            path: postgresql.conf
+      - name: postgresql-init
+        configMap:
+          name: postgresql-config
+          items:
+          - key: init.sql
+            path: init.sql
+
+---
+
+# Service for PostgreSQL (unchanged from MariaDB service)
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb-service  # Kept the same as requested
+  namespace: default
+spec:
+  selector:
+    app: postgresql  # Updated to match PostgreSQL deployment labels
+  ports:
+  - protocol: TCP
+    port: 3306  # Kept the same for compatibility
+    targetPort: 5432  # Maps to PostgreSQL's default port
+    nodePort: 30050
+  type: NodePort
