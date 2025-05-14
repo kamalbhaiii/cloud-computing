@@ -4,7 +4,7 @@
 30030: Prometheus
 30040: Grafana
 30050: PostgresSQL
-30060: Beekeeper (PostgresSQL Dashboard)
+30060: PGAdmin (PostgresSQL Dashboard)
 30070: Server
 30080: 
 30090: 

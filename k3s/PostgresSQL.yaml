@@ -13,11 +13,11 @@ data:
     log_connections = on
   init.sql: |
     -- Create a superuser with all privileges
-    CREATE USER springboot WITH ENCRYPTED PASSWORD 'admin';
-    ALTER USER springboot WITH SUPERUSER CREATEDB CREATEROLE LOGIN;
+    CREATE USER root WITH ENCRYPTED PASSWORD 'admin';
+    ALTER USER root WITH SUPERUSER CREATEDB CREATEROLE LOGIN;
     -- Create a database for the Spring Boot application
-    CREATE DATABASE appdb;
-    GRANT ALL PRIVILEGES ON DATABASE appdb TO springboot;
+    CREATE DATABASE cloud-computing;
+    GRANT ALL PRIVILEGES ON DATABASE cloud-computing TO root;
 
 ---
 
