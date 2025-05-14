@@ -90,13 +90,20 @@ spec:
         image: postgres:latest
         env:
         - name: POSTGRES_USER
-          value: "springboot"  # Superuser for Spring Boot
+          value: "root"  # Superuser for Spring Boot
         - name: POSTGRES_PASSWORD
           value: "admin"  # Password for the superuser
         - name: POSTGRES_DB
-          value: "appdb"  # Default database for the application
+          value: "cloud-computing"  # Default database for the application
         ports:
         - containerPort: 5432  # PostgreSQL default port
+        resources:
+          limits:
+            memory: "700Mi"  # Limit to 700MB for PostgreSQL
+            cpu: "1000m"     # Limit to 1 CPU core
+          requests:
+            memory: "500Mi"
+            cpu: "500m"
         volumeMounts:
         - name: postgresql-storage
           mountPath: "/var/lib/postgresql/data"  # PostgreSQL data directory
