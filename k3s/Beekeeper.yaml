@@ -38,7 +38,7 @@ spec:
         kubernetes.io/hostname: worker-node-5
       containers:
       - name: beekeeper-studio
-        image: beekeeperstudio/community:latest
+        image: beekeeperstudio/beekeeper-studio:latest
         ports:
         - containerPort: 3000  # Beekeeper Studio web interface port
         resources:
