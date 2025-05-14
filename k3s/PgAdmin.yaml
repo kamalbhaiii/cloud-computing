@@ -1,15 +1,14 @@
-# ConfigMap for pgAdmin 4 initial configuration
+# ConfigMap for pgAdmin 4 configuration
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: pgadmin-config
   namespace: default
 data:
-  pgadmin.env: |
-    PGADMIN_DEFAULT_EMAIL=kamal5201ks@gmail.com
-    PGADMIN_DEFAULT_PASSWORD=admin
-    PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION=True
-    PGADMIN_CONFIG_CONSOLE_LOG_LEVEL=30
+  PGADMIN_DEFAULT_EMAIL: kamal5201ks@gmail.com
+  PGADMIN_DEFAULT_PASSWORD: admin
+  PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: "True"
+  PGADMIN_CONFIG_CONSOLE_LOG_LEVEL: "30"
 
 ---
 
@@ -38,7 +37,7 @@ spec:
         - containerPort: 80  # pgAdmin 4 web interface port
         resources:
           limits:
-            memory: "300Mi"  # Limit to 300MB for pgAdmin
+            memory: "300Mi"
             cpu: "500m"
           requests:
             memory: "200Mi"
@@ -48,25 +47,22 @@ spec:
           valueFrom:
             configMapKeyRef:
               name: pgadmin-config
-              key: pgadmin.env
-              optional: true
+              key: PGADMIN_DEFAULT_EMAIL
         - name: PGADMIN_DEFAULT_PASSWORD
           valueFrom:
             configMapKeyRef:
               name: pgadmin-config
-              key: pgadmin.env
-              optional: true
-        volumeMounts:
-        - name: pgadmin-config
-          mountPath: "/pgadmin4/config_local.py"
-          subPath: pgadmin.env
-      volumes:
-      - name: pgadmin-config
-        configMap:
-          name: pgadmin-config
-          items:
-          - key: pgadmin.env
-            path: pgadmin.env
+              key: PGADMIN_DEFAULT_PASSWORD
+        - name: PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION
+          valueFrom:
+            configMapKeyRef:
+              name: pgadmin-config
+              key: PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION
+        - name: PGADMIN_CONFIG_CONSOLE_LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: pgadmin-config
+              key: PGADMIN_CONFIG_CONSOLE_LOG_LEVEL
 
 ---
 
