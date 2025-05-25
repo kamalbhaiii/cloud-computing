@@ -6,17 +6,17 @@ metadata:
   namespace: default
 data:
   postgresql.conf: |
-    listen_addresses = '*'  # Allow connections from any IP for Spring Boot on different node
+    listen_addresses = '*' 
     port = 5432
     max_connections = 100
     shared_buffers = 128MB
     log_connections = on
   pg_hba.conf: |
     # Allow connections from any IP address
-    host    all             root            0.0.0.0/0            md5
+    host    all             all            all            md5
   init.sql: |
     -- Create a superuser with all privileges
-    CREATE USER root WITH ENCRYPTED PASSWORD 'admin';
+    CREATE USER root WITH ENCRYPTED PASSWORD admin;
     ALTER USER root WITH SUPERUSER CREATEDB CREATEROLE LOGIN;
     -- Create a database for the Spring Boot application
     CREATE DATABASE cloud-computing;
@@ -142,14 +142,14 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: postgres-service  # Kept the same as requested
+  name: postgres-service 
   namespace: default
 spec:
   selector:
-    app: postgresql  # Updated to match PostgreSQL deployment labels
+    app: postgresql
   ports:
   - protocol: TCP
-    port: 5432  # Kept the same for compatibility
-    targetPort: 5432  # Maps to PostgreSQL's default port
+    port: 5432
+    targetPort: 5432
     nodePort: 30050
   type: NodePort
