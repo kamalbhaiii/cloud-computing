@@ -107,18 +107,18 @@ spec:
           requests:
             memory: "500Mi"
             cpu: "500m"
-        volumeMounts:
-        - name: postgresql-storage
-          mountPath: "/var/lib/postgresql/data"  # PostgreSQL data directory
-        - name: postgresql-config
-          mountPath: "/etc/postgresql/postgresql.conf"  # Mount config file
-          subPath: postgresql.conf
-        - name: postgresql-init
-          mountPath: "/docker-entrypoint-initdb.d/init.sql"  # Mount init script
-          subPath: init.sql
-        - name: postgresql-config
-          mountPath: "/var/lib/postgresql/data"  # Mount the pg_hba.conf
-          subPath: pg_hba.conf
+          volumeMounts:
+          - name: postgresql-storage
+            mountPath: "/var/lib/postgresql/data"
+          - name: postgresql-config
+            mountPath: "/etc/postgresql/postgresql.conf"
+            subPath: postgresql.conf
+          - name: postgresql-config
+            mountPath: "/etc/postgresql/pg_hba.conf"
+            subPath: pg_hba.conf
+          - name: postgresql-init
+            mountPath: "/docker-entrypoint-initdb.d/init.sql"
+            subPath: init.sql
       volumes:
       - name: postgresql-storage
         persistentVolumeClaim:
