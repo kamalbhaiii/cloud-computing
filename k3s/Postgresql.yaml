@@ -1,4 +1,4 @@
-# ConfigMap for PostgreSQL configuration
+# ConfigMap: PostgreSQL config, pg_hba.conf, init.sql
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -6,15 +6,17 @@ metadata:
   namespace: default
 data:
   postgresql.conf: |
-    listen_addresses = '*' 
+    listen_addresses = '*'
     port = 5432
     max_connections = 100
     shared_buffers = 128MB
     log_connections = on
     hba_file = '/etc/postgresql/pg_hba.conf'
   pg_hba.conf: |
-    local all all  md5
-    host all all 0.0.0.0/0 md5
+    # Allow local socket connections
+    local   all             all                                     md5
+    # Allow remote TCP/IP connections
+    host    all             all             0.0.0.0/0               md5
   init.sql: |
     CREATE USER root WITH ENCRYPTED PASSWORD 'admin';
     ALTER USER root WITH SUPERUSER CREATEDB CREATEROLE LOGIN;
@@ -43,10 +45,10 @@ spec:
     required:
       nodeSelectorTerms:
       - matchExpressions:
-        - key: kubernetes.io/hostname
-          operator: In
-          values:
-          - worker-node-5
+          - key: kubernetes.io/hostname
+            operator: In
+            values:
+              - worker-node-5
 
 ---
 
@@ -140,11 +142,11 @@ metadata:
   name: postgres-service
   namespace: default
 spec:
+  type: NodePort
   selector:
     app: postgresql
   ports:
-  - protocol: TCP
-    port: 5432
-    targetPort: 5432
-    nodePort: 30050
-  type: NodePort
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+      nodePort: 30050
