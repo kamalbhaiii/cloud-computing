@@ -117,7 +117,7 @@ spec:
           mountPath: "/docker-entrypoint-initdb.d/init.sql"  # Mount init script
           subPath: init.sql
         - name: postgresql-config
-          mountPath: "/etc/postgresql/pg_hba.conf"  # Mount the pg_hba.conf
+          mountPath: "/var/lib/postgresql/data"  # Mount the pg_hba.conf
           subPath: pg_hba.conf
       volumes:
       - name: postgresql-storage
