@@ -12,7 +12,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: postgresql
+  name: postgresql-svc
 spec:
   type: NodePort
   ports:
@@ -61,6 +61,6 @@ spec:
             - name: postgres-storage
               mountPath: /var/lib/postgresql/data
       volumes:
-        - name: postgres-storage
+        - name: postgresql-storage
           persistentVolumeClaim:
-            claimName: postgres-pvc
+            claimName: postgresql-pvc
