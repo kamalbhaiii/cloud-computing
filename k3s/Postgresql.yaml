@@ -13,7 +13,7 @@ data:
     log_connections = on
   pg_hba.conf: |
     # Allow connections from any IP address
-    host    all             all            all            md5
+    host    all             all            all            scram-sha-256
   init.sql: |
     -- Create a superuser with all privileges
     CREATE USER root WITH ENCRYPTED PASSWORD admin;
