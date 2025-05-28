@@ -14,6 +14,7 @@ data:
     hba_file = '/etc/postgresql/pg_hba.conf'
   pg_hba.conf: |
     host all all 0.0.0.0/0 md5
+    local all all 0.0.0.0/0 md5
   init.sql: |
     CREATE USER root WITH ENCRYPTED PASSWORD 'admin';
     ALTER USER root WITH SUPERUSER CREATEDB CREATEROLE LOGIN;
