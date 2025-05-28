@@ -58,7 +58,7 @@ spec:
             - name: POSTGRES_PASSWORD
               value: "admin"
           volumeMounts:
-            - name: postgres-storage
+            - name: postgresql-storage
               mountPath: /var/lib/postgresql/data
       volumes:
         - name: postgresql-storage
