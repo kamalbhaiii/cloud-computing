@@ -100,6 +100,8 @@ spec:
           value: "admin"
         - name: POSTGRES_DB
           value: "cloud_computing"
+        - name: POSTGRES_HOST_AUTH_METHOD
+          value: "trust"
         ports:
         - containerPort: 5432
         volumeMounts:
