@@ -2,8 +2,15 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: postgresql-config
+  name: postgres-config
   namespace: default
+data:
+  main-config: |
+    # PostgreSQL Config-Beispiel
+    listen_addresses = '*'
+    max_connections = 100
+    shared_buffers = 128MB
+    dynamic_shared_memory_type = posix
 
 ---
 
@@ -91,19 +98,19 @@ spec:
           mountPath: /var/lib/postgresql/data
         - name: postgres-config-volume
           mountPath: /etc/postgresql/postgresql.conf
-          subPath: postgresql.conf    
+          subPath: postgresql.conf
 
 
       volumes:
-        - name: postgres-storage
-          persistentVolumeClaim:
-            claimName: postgresql-pvc
-        - name: postgres-config-volume
-          configMap:
-            name: postgres-config
-            items:
-            - key: main-config
-              path: postgresql.conf
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: postgresql-pvc
+      - name: postgres-config-volume
+        configMap:
+          name: postgres-config
+          items:
+          - key: main-config
+            path: postgresql.conf
 
 ---
 
