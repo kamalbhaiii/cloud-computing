@@ -10,10 +10,10 @@ data:
         "1": {
           "Name": "PostgreSQL",
           "Group": "Servers",
-          "Host": "postgres-service",
+          "Host": "postgresql-svc",
           "Port": 5432,
           "MaintenanceDB": "postgres",
-          "Username": "root",
+          "Username": "admin",
           "SSLMode": "prefer"
         }
       }
