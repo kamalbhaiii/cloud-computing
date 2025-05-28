@@ -11,20 +11,18 @@ data:
     max_connections = 100
     shared_buffers = 128MB
     log_connections = on
+    hba_file = '/etc/postgresql/pg_hba.conf'
   pg_hba.conf: |
-    # Allow connections from any IP address
-    host    all             all            all            scram-sha-256
+    host all all 0.0.0.0/0 md5
   init.sql: |
-    -- Create a superuser with all privileges
-    CREATE USER root WITH ENCRYPTED PASSWORD admin;
+    CREATE USER root WITH ENCRYPTED PASSWORD 'admin';
     ALTER USER root WITH SUPERUSER CREATEDB CREATEROLE LOGIN;
-    -- Create a database for the Spring Boot application
-    CREATE DATABASE cloud-computing;
-    GRANT ALL PRIVILEGES ON DATABASE cloud-computing TO root;
+    CREATE DATABASE cloud_computing;
+    GRANT ALL PRIVILEGES ON DATABASE cloud_computing TO root;
 
 ---
 
-# PersistentVolume for PostgreSQL data
+# PersistentVolume
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -39,7 +37,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "/mnt/postgres-data"  # Updated path for PostgreSQL data
+    path: "/mnt/postgres-data"
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -51,7 +49,7 @@ spec:
 
 ---
 
-# PersistentVolumeClaim for PostgreSQL
+# PersistentVolumeClaim
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -70,7 +68,7 @@ spec:
 
 ---
 
-# Deployment for PostgreSQL
+# Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -90,34 +88,28 @@ spec:
         kubernetes.io/hostname: worker-node-5
       containers:
       - name: postgresql
-        image: postgres:latest
+        image: postgres:17
+        args: ["-c", "config_file=/etc/postgresql/postgresql.conf"]
         env:
         - name: POSTGRES_USER
-          value: "root"  # Superuser for Spring Boot
+          value: "root"
         - name: POSTGRES_PASSWORD
-          value: "admin"  # Password for the superuser
+          value: "admin"
         - name: POSTGRES_DB
-          value: "cloud-computing"  # Default database for the application
+          value: "cloud_computing"
         ports:
-        - containerPort: 5432  # PostgreSQL default port
-        resources:
-          limits:
-            memory: "700Mi"  # Limit to 700MB for PostgreSQL
-            cpu: "1000m"     # Limit to 1 CPU core
-          requests:
-            memory: "500Mi"
-            cpu: "500m"
+        - containerPort: 5432
         volumeMounts:
         - name: postgresql-storage
-          mountPath: "/var/lib/postgresql/data"
+          mountPath: /var/lib/postgresql/data
         - name: postgresql-config
-          mountPath: "/etc/postgresql/postgresql.conf"
+          mountPath: /etc/postgresql/postgresql.conf
           subPath: postgresql.conf
         - name: postgresql-config
-          mountPath: "/etc/postgresql/pg_hba.conf"
+          mountPath: /etc/postgresql/pg_hba.conf
           subPath: pg_hba.conf
         - name: postgresql-init
-          mountPath: "/docker-entrypoint-initdb.d/init.sql"
+          mountPath: /docker-entrypoint-initdb.d/init.sql
           subPath: init.sql
       volumes:
       - name: postgresql-storage
@@ -127,22 +119,24 @@ spec:
         configMap:
           name: postgresql-config
           items:
-          - key: postgresql.conf
-            path: postgresql.conf
+            - key: postgresql.conf
+              path: postgresql.conf
+            - key: pg_hba.conf
+              path: pg_hba.conf
       - name: postgresql-init
         configMap:
           name: postgresql-config
           items:
-          - key: init.sql
-            path: init.sql
+            - key: init.sql
+              path: init.sql
 
 ---
 
-# Service for PostgreSQL (unchanged from MariaDB service)
+# NodePort Service
 apiVersion: v1
 kind: Service
 metadata:
-  name: postgres-service 
+  name: postgres-service
   namespace: default
 spec:
   selector:
