@@ -97,7 +97,7 @@ spec:
       volumes:
         - name: postgres-storage
           persistentVolumeClaim:
-            claimName: postgres-pvc
+            claimName: postgresql-pvc
         - name: postgres-config-volume
           configMap:
             name: postgres-config
