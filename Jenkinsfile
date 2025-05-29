@@ -2,35 +2,29 @@ pipeline {
     agent any
 
     environment {
-        GIT_DISCOVERY_ACROSS_FILESYSTEM = '1'
-        PROJECT_DIR = '/home/ubuntu/cloud-computing'
+        KUBECTL_CMD = 'sudo kubectl'
     }
 
     stages {
-        stage('Pull Latest Changes') {
+        stage('Clone Repo') {
             steps {
-                echo "Checking out latest changes on master branch..."
-                dir("${PROJECT_DIR}") {
-                    sh '''
-                    whoami
-                    ls -la
-                    git checkout master
-                    git pull origin master
-                    '''
-                }
+                git url: 'https://github.com/kamalbhaiii/cloud-computing.git', branch: 'master'
             }
         }
 
-        stage('Deploy to k3s') {
+        stage('Deploy K3s Manifests') {
             steps {
-                echo "Applying k3s manifests..."
-                dir("${PROJECT_DIR}/k3s") {
-                    sh '''
-                    ls -la
-                    kubectl apply -f .
-                    '''
-                }
+                sh '${KUBECTL_CMD} apply -f k3s/'
             }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ Deployment successful'
+        }
+        failure {
+            echo '❌ Deployment failed'
         }
     }
 }
