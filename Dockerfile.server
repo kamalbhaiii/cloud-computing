@@ -14,8 +14,8 @@ ENV SPRING_PROFILE=prod \
     DB_NAME=cloud-computing \
     DB_USERNAME=admin \
     DB_PASSWORD=admin \
-    SERVER_ADDRESS=192.168.137.178 \
-    SERVER_PORT=30070
+    SERVER_ADDRESS=0.0.0.0 \
+    SERVER_PORT=8080
 
 # Run the jar file
 ENTRYPOINT ["sh", "-c", "java -Dspring.profiles.active=$SPRING_PROFILE -jar app.jar"]
