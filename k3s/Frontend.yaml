@@ -13,7 +13,8 @@ spec:
       labels:
         app: frontend
     spec:
-      nodeName: worker-node-4
+      nodeSelector:
+        role: worker-node-4
       containers:
       - name: frontend
         image: kamalbhaiii/cloud-computing-frontend:20250513-a159c36
