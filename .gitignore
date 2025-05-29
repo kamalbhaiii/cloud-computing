@@ -8,3 +8,4 @@ server/target/
 backup
 pred_*.*
 __pycache__
+/*-ignore*
