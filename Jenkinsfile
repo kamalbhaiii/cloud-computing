@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        KUBECTL_CMD = 'sudo kubectl'
+        KUBECONFIG = '/var/lib/jenkins/.kube/config'
     }
 
     stages {
@@ -14,7 +14,7 @@ pipeline {
 
         stage('Deploy K3s Manifests') {
             steps {
-                sh '${KUBECTL_CMD} apply -f k3s/'
+                sh 'sudo /usr/local/bin/kubectl apply -f k3s/'
             }
         }
     }
