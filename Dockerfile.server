@@ -13,7 +13,7 @@ ENV SPRING_PROFILE=prod \
     DB_PORT=30050 \
     DB_NAME=cloud-computing \
     DB_USERNAME=admin \
-    DB_PASS=admin \
+    DB_PASSWORD=admin \
     SERVER_ADDRESS=192.168.137.178 \
     SERVER_PORT=30070
 
