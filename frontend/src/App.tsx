@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Dashboard from "./pages/dashboard/index";
+import NotFound from "./pages/notfound/index";
 import Navbar from "./components/navbar/index";
 
 export default function App() {
@@ -9,7 +10,7 @@ export default function App() {
         <Navbar />
         <Routes>
           <Route path="/" element={<Dashboard />} />
-          {/* Add more routes if needed */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
     </Router>
