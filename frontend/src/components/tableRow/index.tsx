@@ -8,7 +8,7 @@ interface Props {
   onEdit: () => void;
 }
 
-export default function TableRow({ item }: Props) {
+export default function TableRow({ item, onDelete, onEdit }: Props) {
   return (
     <tr className="hover:bg-gray-100 dark:hover:bg-gray-800">
       <td className="p-2 text-center">{item.id}</td>
@@ -21,12 +21,12 @@ export default function TableRow({ item }: Props) {
         </a>
       </td>
       <td>
-      <button className="text-blue-500 hover:text-blue-700">
+      <button className="text-blue-500 hover:text-blue-700" onClick={onEdit}>
             <Pencil size={16} />
           </button>
       </td>
       <td>
-      <button className="text-red-500 hover:text-red-700">
+      <button className="text-red-500 hover:text-red-700" onClick={onDelete}>
             <Trash size={16} />
           </button>
       </td>

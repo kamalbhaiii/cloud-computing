@@ -104,12 +104,10 @@ export default function Database() {
               {["id", "date", "time", "name", "link"].map((field) => (
                 <th
                   key={field}
-                  onClick={() =>
-                    setSortField(field as any) ||
-                    setSortAsc((prev) =>
-                      sortField === field ? !prev : true
-                    )
-                  }
+                  onClick={() =>{
+                    setSortField(field as keyof typeof images[0]);
+                    setSortAsc((prev) => (sortField === field ? !prev : true));
+                  }}
                   className="p-2 cursor-pointer select-none hover:bg-gray-200 dark:hover:bg-gray-700"
                 >
                   {field.toUpperCase()}
@@ -124,10 +122,10 @@ export default function Database() {
             {filtered.map((item, idx) =>
               idx === filtered.length - 1 ? (
                 <tr ref={lastRowRef} key={item.id}>
-                  <TableRow item={item} />
+                  <TableRow metadata="" onDelete={()=>{console.log("Delete Pressed")}} onEdit={()=>{console.log("Edit Pressed")}} item={item} />
                 </tr>
               ) : (
-                <TableRow key={item.id} item={item} />
+                <TableRow metadata="" onDelete={()=>{console.log("Delete Pressed")}} onEdit={()=>{console.log("Edit Pressed")}} key={item.id} item={item} />
               )
             )}
             {hasMore && <TableSkeleton />}
