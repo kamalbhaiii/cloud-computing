@@ -21,6 +21,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(logger);
 
 app.use('/api/images', imageRoutes);
+app.get('/api/test', (req,res) => {
+    res.status(200).send({
+        message:"Backend is live!"
+    })
+})
 
 const swaggerDocument = JSON.parse(
     fs.readFileSync(path.join(__dirname, 'swagger', 'swagger.json'))

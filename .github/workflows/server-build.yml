@@ -21,34 +21,31 @@ jobs:
       - name: Check for server changes or Dockerfile.server
         id: check_changes
         run: |
-            if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '^(server/|Dockerfile\.server$)'; then
-              echo "changes_detected=true" >> $GITHUB_OUTPUT
-            else
-              echo "changes_detected=false" >> $GITHUB_OUTPUT
-            fi
-        
+          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '^(server/|Dockerfile\.server$)'; then
+            echo "changes_detected=true" >> $GITHUB_OUTPUT
+          else
+            echo "changes_detected=false" >> $GITHUB_OUTPUT
+          fi
 
-      - name: Set up JDK
+      - name: Set up Node.js
         if: steps.check_changes.outputs.changes_detected == 'true'
-        uses: actions/setup-java@v4
+        uses: actions/setup-node@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          node-version: '20'
 
-      - name: Cache Maven dependencies
+      - name: Cache node_modules
         if: steps.check_changes.outputs.changes_detected == 'true'
         uses: actions/cache@v4
         with:
-          path: ~/.m2
-          key: ${{ runner.os }}-maven-${{ hashFiles('server/pom.xml') }}
-          restore-keys: ${{ runner.os }}-maven
+          path: server/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('server/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
-      - name: Build Spring Boot JAR
+      - name: Install dependencies
         if: steps.check_changes.outputs.changes_detected == 'true'
         working-directory: server
-        run: |
-          mvn clean package -DskipTests
-          ls -la target/
+        run: npm ci
 
       - name: Set up QEMU
         if: steps.check_changes.outputs.changes_detected == 'true'
