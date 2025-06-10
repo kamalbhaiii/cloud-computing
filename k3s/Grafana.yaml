@@ -16,7 +16,7 @@ spec:
         - key: kubernetes.io/hostname
           operator: In
           values:
-          - master-node 
+          - master-node
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
