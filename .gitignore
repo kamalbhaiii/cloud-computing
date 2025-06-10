@@ -9,3 +9,4 @@ backup
 pred_*.*
 __pycache__
 /*-ignore*
+*/node_modules

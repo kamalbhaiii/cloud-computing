@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - KS-backend
     paths:
       - 'server/**'
       - 'Dockerfile.server'

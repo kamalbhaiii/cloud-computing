@@ -1,21 +1,18 @@
-# Use a base image with JDK 17 (lightweight version)
-FROM arm32v7/eclipse-temurin:17-jdk
+FROM --platform=linux/arm/v7 node:18-alpine AS build
 
-# Set the working directory inside the container
 WORKDIR /app
 
-# Copy the pre-built JAR file from the 'server/target' directory to the container
-COPY server/target/*.jar app.jar
+COPY server/package*.json ./
+RUN npm install --production
 
-# Set environment variables
-ENV SPRING_PROFILE=prod \
-    DB_HOST=192.168.137.178 \
-    DB_PORT=30050 \
-    DB_NAME=cloud-computing \
-    DB_USERNAME=admin \
-    DB_PASSWORD=admin \
-    SERVER_ADDRESS=0.0.0.0 \
-    SERVER_PORT=8080
+COPY server/ .
 
-# Run the jar file
-ENTRYPOINT ["sh", "-c", "java -Dspring.profiles.active=$SPRING_PROFILE -jar app.jar"]
+RUN npm run build || echo "No build script, continuing..."
+
+FROM --platform=linux/arm/v7 node:18-alpine
+
+WORKDIR /app
+
+COPY --from=build /app ./
+
+CMD ["node", "server.js"]

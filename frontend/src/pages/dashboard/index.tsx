@@ -3,9 +3,8 @@ import ImageCard from "../../components/card";
 import Pagination from "../../components/pagination";
 import MetadataModal from "../../components/metadata";
 import Alert from "../../components/alert";
-
 import { useImageStore } from "../../store/imageStore";
-import { generateDummyImages } from "../../data/dummyData";
+import { fetchBackendImages, deleteBackendImage } from "../../data/realData";
 
 export default function Dashboard() {
   const { images, setImages, deleteImage, updateImage } = useImageStore();
@@ -23,16 +22,30 @@ export default function Dashboard() {
     setTimeout(() => setAlert((a) => ({ ...a, show: false })), 3000);
   };
 
-  // Initialize dummy images only once
   useEffect(() => {
     if (images.length === 0) {
-      setImages(generateDummyImages(49));
+      fetchBackendImages()
+        .then((data) => {
+          setImages(data);
+        })
+        .catch(() => {
+          showAlert("Failed to fetch images from backend", "error");
+        });
     }
   }, [images.length, setImages]);
 
-  const handleDelete = (id: number) => {
-    deleteImage(id);
-    showAlert("Image deleted successfully", "success");
+  const handleDelete = async (id: number) => {
+    const image = images.find((img) => img.id === id);
+    if (!image) return;
+  
+    try {
+      await deleteBackendImage(image.name);
+      deleteImage(id);
+      showAlert("Image deleted successfully", "success");
+    } catch (err) {
+      console.error(err);
+      showAlert("Failed to delete image", "error");
+    }
   };
 
   const handleMetadataSave = (id: number, newMeta: string) => {
@@ -50,6 +63,7 @@ export default function Dashboard() {
         {currentImages.map((img) => (
           <ImageCard
             key={img.id}
+            name={img.name}
             image={img.image}
             metadata={img.metadata}
             onDelete={() => handleDelete(img.id)}

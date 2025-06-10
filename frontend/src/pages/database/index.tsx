@@ -1,24 +1,40 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useImageStore } from "../../store/imageStore";
-import { generateDummyImages } from "../../data/dummyData";
+import { fetchBackendImages } from "../../data/realData"; // <-- fetch from backend now
 import SearchBar from "../../components/searchBar/index";
 import TableRow from "../../components/tableRow/index";
 import TableSkeleton from "../../components/tableSkeleton/index";
+import { deleteBackendImage } from "../../data/realData";
 
 export default function Database() {
-  const { images, setImages } = useImageStore();
+  const { images, setImages, deleteImage, updateImage } = useImageStore();
   const [filtered, setFiltered] = useState(images.slice(0, 20));
   const [searchTerm, setSearchTerm] = useState("");
   const [sortField, setSortField] = useState<keyof typeof images[0]>("id");
   const [sortAsc, setSortAsc] = useState(true);
   const [hasMore, setHasMore] = useState(true);
   const observer = useRef<IntersectionObserver | null>(null);
+  const [alert, setAlert] = useState({
+    show: false,
+    message: "",
+    type: "success" as "success" | "error",
+  });
 
-  // On first mount: populate store if empty
+  const showAlert = (message: string, type: "success" | "error") => {
+    setAlert({ show: true, message, type });
+    setTimeout(() => setAlert((a) => ({ ...a, show: false })), 3000);
+  };
+
+  // Fetch images from backend once on mount
   useEffect(() => {
     if (images.length === 0) {
-      const dummy = generateDummyImages(50); // Load 100 fake entries
-      setImages(dummy);
+      fetchBackendImages()
+        .then((data) => {
+          setImages(data);
+        })
+        .catch(() => {
+          showAlert("Failed to fetch images from backend", "error");
+        });
     }
   }, [images.length, setImages]);
 
@@ -52,9 +68,10 @@ export default function Database() {
     setHasMore(result.length > 20);
   }, [images, searchTerm, sortField, sortAsc]);
 
-  const loadMore = () => {
+  const loadMore = useCallback(() => {
     const nextChunk = 20;
     const newLen = filtered.length + nextChunk;
+
     const filteredFull = [...images]
       .filter((img) =>
         Object.values(img).some((val) =>
@@ -76,7 +93,7 @@ export default function Database() {
     const more = filteredFull.slice(0, newLen);
     setFiltered(more);
     setHasMore(more.length < filteredFull.length);
-  };
+  }, [filtered.length, images, searchTerm, sortField, sortAsc]);
 
   const lastRowRef = useCallback(
     (node: HTMLTableRowElement | null) => {
@@ -91,6 +108,26 @@ export default function Database() {
     [hasMore, loadMore]
   );
 
+  // Edit and Delete handlers
+  const handleDelete = async (id: number) => {
+    const image = images.find((img) => img.id === id);
+    if (!image) return;
+  
+    try {
+      await deleteBackendImage(image.name);
+      deleteImage(id);
+      showAlert("Image deleted successfully", "success");
+    } catch (err) {
+      console.error(err);
+      showAlert("Failed to delete image", "error");
+    }
+  };
+  
+  const handleEdit = (id: number, newMeta: string) => {
+    updateImage(id, { metadata: newMeta });
+    showAlert("Metadata updated", "success");
+  };
+
   return (
     <div className="p-4 max-w-7xl mx-auto">
       <h2 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-white">
@@ -104,7 +141,7 @@ export default function Database() {
               {["id", "date", "time", "name", "link"].map((field) => (
                 <th
                   key={field}
-                  onClick={() =>{
+                  onClick={() => {
                     setSortField(field as keyof typeof images[0]);
                     setSortAsc((prev) => (sortField === field ? !prev : true));
                   }}
@@ -116,22 +153,60 @@ export default function Database() {
                   )}
                 </th>
               ))}
+              <th className="p-2">Actions</th>
             </tr>
           </thead>
           <tbody>
             {filtered.map((item, idx) =>
               idx === filtered.length - 1 ? (
                 <tr ref={lastRowRef} key={item.id}>
-                  <TableRow metadata="" onDelete={()=>{console.log("Delete Pressed")}} onEdit={()=>{console.log("Edit Pressed")}} item={item} />
+                  <TableRow
+                    item={item}
+                    metadata={item.metadata}
+                    onDelete={() => handleDelete(item.id)}
+                    onEdit={() => {
+                      const newMeta = prompt(
+                        "Edit metadata",
+                        item.metadata
+                      );
+                      if (newMeta !== null && newMeta.trim() !== "") {
+                        handleEdit(item.id, newMeta.trim());
+                      }
+                    }}
+                  />
                 </tr>
               ) : (
-                <TableRow metadata="" onDelete={()=>{console.log("Delete Pressed")}} onEdit={()=>{console.log("Edit Pressed")}} key={item.id} item={item} />
+                <TableRow
+                  key={item.id}
+                  item={item}
+                  metadata={item.metadata}
+                  onDelete={() => handleDelete(item.id)}
+                  onEdit={() => {
+                    const newMeta = prompt("Edit metadata", item.metadata);
+                    if (newMeta !== null && newMeta.trim() !== "") {
+                      handleEdit(item.id, newMeta.trim());
+                    }
+                  }}
+                />
               )
             )}
             {hasMore && <TableSkeleton />}
           </tbody>
         </table>
       </div>
+
+      {/* Alert component for showing success/error messages */}
+      {alert.show && (
+        <div
+          className={`fixed bottom-4 right-4 px-4 py-2 rounded shadow ${
+            alert.type === "success"
+              ? "bg-green-500 text-white"
+              : "bg-red-500 text-white"
+          }`}
+        >
+          {alert.message}
+        </div>
+      )}
     </div>
   );
 }
