@@ -29,7 +29,6 @@ spec:
   resources:
     requests:
       storage: 5Gi
-  volumeName: grafana-pv
 ---
 apiVersion: apps/v1
 kind: Deployment
