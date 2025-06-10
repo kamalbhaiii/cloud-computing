@@ -12,7 +12,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: postgresql-svc
+  name: postgresql-service
 spec:
   type: NodePort
   ports:
