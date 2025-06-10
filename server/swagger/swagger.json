@@ -3,7 +3,7 @@
     "info": {
         "title": "Edge Computing Image API",
         "version": "1.0.0",
-        "description": "API for uploading, retrieving, updating, and deleting dog/cat images with metadata"
+        "description": "API for uploading, retrieving, updating, and deleting images with metadata and sends Telegram Notification"
     },
     "servers": [
         {

@@ -3,6 +3,7 @@ import { routes } from "../../routes";
 import { useState, useEffect } from "react";
 import { Menu, X, Sun, Moon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import config from "../../config/envConfig"
 
 export default function Navbar() {
   const location = useLocation();
@@ -21,7 +22,7 @@ export default function Navbar() {
     <nav className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
         <h1 className="text-xl font-bold text-gray-800 dark:text-white">
-          Cloud Computing
+          {config.WEB_NAME}
         </h1>
 
         {/* Desktop Menu */}

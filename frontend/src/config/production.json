@@ -1,5 +1,6 @@
 {
     "BACKEND_END_POINT": "192.168.137.178",
     "BACKEND_PORT": "30070",
-    "FEATURE_FLAG": false
+    "FEATURE_FLAG": false,
+    "WEB_NAME": "Edge Computing Dashboard"
 }
