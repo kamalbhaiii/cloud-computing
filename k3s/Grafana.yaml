@@ -9,6 +9,14 @@ spec:
     - ReadWriteOnce
   hostPath:
     path: /mnt/data/grafana
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - master-node 
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
