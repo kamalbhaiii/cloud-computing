@@ -96,6 +96,61 @@ def preprocess_frame(frame, input_scale, input_zero_point):
     logging.debug(f"Frame preprocessed in {preprocess_time:.3f}s")
     return frame_input
 
+def soft_nms(boxes, scores, classes, metas=None, iou_thresh=0.5, sigma=0.5, conf_thresh=0.001):
+    """
+    Soft-NMS mit optionaler Meta-Information (z. B. Tracking-ID).
+    """
+    boxes = np.array(boxes)
+    scores = np.array(scores)
+    classes = np.array(classes)
+    metas = np.array(metas) if metas is not None else np.full(len(scores), -1)
+    
+    keep = []  # Liste von (box, score, class, meta)
+
+    while len(scores) > 0:
+        max_idx = np.argmax(scores)
+        max_box = boxes[max_idx]
+        max_score = scores[max_idx]
+        max_class = classes[max_idx]
+        max_meta = metas[max_idx]
+
+        keep.append((max_box, max_score, max_class, max_meta))
+
+        # Entferne aktuellen Eintrag
+        boxes = np.delete(boxes, max_idx, axis=0)
+        scores = np.delete(scores, max_idx)
+        classes = np.delete(classes, max_idx)
+        metas = np.delete(metas, max_idx)
+
+        if len(scores) == 0:
+            break
+
+        # Berechne IoU
+        x1 = np.maximum(max_box[0], boxes[:, 0])
+        y1 = np.maximum(max_box[1], boxes[:, 1])
+        x2 = np.minimum(max_box[2], boxes[:, 2])
+        y2 = np.minimum(max_box[3], boxes[:, 3])
+
+        inter = np.maximum(0, x2 - x1) * np.maximum(0, y2 - y1)
+        area_max = (max_box[2] - max_box[0]) * (max_box[3] - max_box[1])
+        area_boxes = (boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1])
+        union = area_max + area_boxes - inter
+        IoU = inter / union
+
+        # Score abschwächen
+        for j, iou in enumerate(IoU):
+            if iou > iou_thresh:
+                scores[j] *= np.exp(-(iou ** 2) / sigma)
+
+        # Nur behalten, was noch über Threshold liegt
+        mask = scores > conf_thresh
+        boxes = boxes[mask]
+        scores = scores[mask]
+        classes = classes[mask]
+        metas = metas[mask]
+
+    return keep
+
 def run_inference(interpreter, frame_input):
     """Run inference on the Edge TPU."""
     inference_start = time.time()
@@ -105,9 +160,56 @@ def run_inference(interpreter, frame_input):
     inference_time = time.time() - inference_start
     logging.debug(f"Inference completed in {inference_time:.3f}s, output shape: {output.shape}")
     return output
+def process_output(interpreter, labels, thresholds, input_width, input_height):
+    """Verarbeitet die 4 Tensor-Ausgaben des EdgeTPU-Modells mit Soft-NMS."""
+    try:
+        # Tensoren abrufen
+        boxes = interpreter.get_tensor(interpreter.get_output_details()[0]["index"])[0]      # [N, 4]
+        scores = interpreter.get_tensor(interpreter.get_output_details()[1]["index"])[0]     # [N]
+        class_ids = interpreter.get_tensor(interpreter.get_output_details()[2]["index"])[0]  # [N]
+        meta = interpreter.get_tensor(interpreter.get_output_details()[3]["index"])[0]       # [N] optional
 
+        conf_thresh = thresholds["confidence"]
+        valid = scores >= conf_thresh
+        boxes = boxes[valid]
+        scores = scores[valid]
+        class_ids = class_ids[valid]
+        meta = meta[valid]
+
+        pixel_boxes = []
+        for box in boxes:
+            # [x_center, y_center, width, height] → [x_min, y_min, x_max, y_max]
+            cx, cy, w, h = box
+            x_min = max(cx - w / 2, 0) * input_width
+            y_min = max(cy - h / 2, 0) * input_height
+            x_max = min(cx + w / 2, 1) * input_width
+            y_max = min(cy + h / 2, 1) * input_height
+            pixel_boxes.append([x_min, y_min, x_max, y_max])
+
+        # Soft-NMS anwenden
+        keep = soft_nms(pixel_boxes, scores, class_ids, metas=meta,iou_thresh=0.5, sigma=0.5, conf_thresh=conf_thresh)
+
+        # Ergebnisse strukturieren
+        detections = []
+        for box, score, class_id, meta_val in keep:
+            label = labels.get(int(class_id), f"Class {int(class_id)}")
+            detections.append({
+                "bbox": [int(x) for x in box],
+                "score": float(score),
+                "class": int(class_id),
+                "label": label,
+                "meta": int(meta_val)
+            })
+
+        return detections
+
+    except Exception as e:
+        logging.error(f"Fehler beim Verarbeiten des Outputs: {e}")
+        return []
+
+"""
 def process_output(output, labels, thresholds):
-    """Process model output and return detection if thresholds are met."""
+    """"Process model output and return detection if thresholds are met.""""
     process_start = time.time()
     output = output[0]  # Remove batch dimension
     objectness_scores = output[4, :]  # Objectness scores
@@ -141,6 +243,7 @@ def process_output(output, labels, thresholds):
     process_time = time.time() - process_start
     logging.debug(f"Output processed in {process_time:.3f}s")
     return predicted_label, confidence
+"""
 
 def start_background_processes(queue, telegram_token, telegram_user_id):
     """Start MinIO uploader and Telegram notifier processes."""
@@ -209,7 +312,7 @@ def main():
             # Preprocess and run inference
             frame_input = preprocess_frame(frame, input_scale, input_zero_point)
             output = run_inference(interpreter, frame_input)
-
+            """
             # Process output
             result = process_output(output, labels, THRESHOLDS)
             if result is None:
@@ -222,6 +325,18 @@ def main():
             # Queue detection
             upload_queue.put((frame, message, predicted_label, confidence))
             logger.debug("Detection queued for upload")
+            """
+            # Neue Ausgabeverarbeitung mit Soft-NMS
+            detections = process_output(interpreter, labels, THRESHOLDS, width, height)
+            if not detections:
+                continue
+
+            for det in detections:
+                message = f"Detected: {det['label']} with confidence {det['score']:.2f} (Meta: {det['meta']})"
+                logger.info(message)
+                upload_queue.put((frame.copy(), message, det['label'], det['score']))
+
+            logger.debug(f"{len(detections)} detections queued for upload")
 
             total_time = time.time() - start_time
             logger.debug(f"Frame processed in {total_time:.3f}s")
