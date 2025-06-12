@@ -7,9 +7,10 @@ from multiprocessing import Process, Queue
 from pycoral.utils import edgetpu
 from pycoral.adapters import common
 from pycoral.utils.edgetpu import list_edge_tpus
-from PIL import Image
+from PIL import Image, ImageDraw
 import requests
 from io import BytesIO
+import uuid
 
 def setup_logging(mode):
     """Configure logging based on mode (Normal/Debug)."""
@@ -107,7 +108,7 @@ def load_image(image_path, width, height):
         img = img.resize((width, height), Image.Resampling.LANCZOS)
         frame = np.array(img)
         logging.debug(f"Image loaded and resized to {width}x{height}")
-        return frame
+        return frame, img
     except Exception as e:
         logging.error(f"Failed to load image: {e}")
         raise
@@ -245,6 +246,35 @@ def process_output(interpreter, labels, thresholds, input_width, input_height):
         logging.error(f"Error processing output: {e}")
         return []
 
+def draw_bounding_boxes(img, detections):
+    """Draw bounding boxes on the image for detected objects."""
+    try:
+        draw = ImageDraw.Draw(img)
+        for det in detections:
+            if det["label"].lower() in ["cat", "dog", "bird"]:
+                x_min, y_min, x_max, y_max = det["bbox"]
+                # Draw rectangle (red border, 2 pixels thick)
+                draw.rectangle((x_min, y_min, x_max, y_max), outline="red", width=2)
+                logging.debug(f"Drew bounding box for {det['label']} at {det['bbox']}")
+        return img
+    except Exception as e:
+        logging.error(f"Error drawing bounding boxes: {e}")
+        raise
+
+def save_image_with_boxes(img, output_dir):
+    """Save the image with bounding boxes to the output directory."""
+    try:
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        # Generate unique filename
+        output_path = os.path.join(output_dir, f"output_{uuid.uuid4().hex}.jpg")
+        img.save(output_path, "JPEG")
+        logging.info(f"Saved image with bounding boxes to {output_path}")
+        return output_path
+    except Exception as e:
+        logging.error(f"Error saving image with bounding boxes: {e}")
+        raise
+
 def upload_to_endpoint(queue):
     """Background process to send image and category to the endpoint."""
     endpoint = "http://192.168.137.178:30070/api/images"
@@ -301,6 +331,7 @@ def main():
         "objectness": 0.8,
         "class_score": 0.8
     }
+    OUTPUT_DIR = "output"  # Directory to save images with bounding boxes
     # Check for Edge TPU devices
     logger.debug("Listing connected Edge TPUs")
     tpus = list_edge_tpus()
@@ -314,7 +345,7 @@ def main():
         labels = load_labels(LABEL_FILE)
         interpreter, width, height, input_scale, input_zero_point = initialize_tpu_model(MODEL_FILE)
         image_path = get_image_from_statics()
-        frame = load_image(image_path, width, height)
+        frame, img = load_image(image_path, width, height)
         upload_queue = Queue()
         upload_process = start_background_process(upload_queue)
     except Exception as e:
@@ -329,6 +360,11 @@ def main():
         # Process output with Soft-NMS
         detections = process_output(interpreter, labels, THRESHOLDS, width, height)
         if detections:
+            # Draw bounding boxes on the image
+            img_with_boxes = draw_bounding_boxes(img, detections)
+            # Save the image with bounding boxes
+            save_image_with_boxes(img_with_boxes, OUTPUT_DIR)
+            # Process detections for upload
             for det in detections:
                 label = det["label"]
                 # Only process cat, dog, or bird
