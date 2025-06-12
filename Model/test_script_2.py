@@ -10,6 +10,7 @@ import queue
 import requests
 from io import BytesIO
 from PIL import Image
+import os
 
 # Configuration
 MODEL_PATH = 'best_int8_edgetpu.tflite'
@@ -17,6 +18,10 @@ LABEL_MAP_PATH = 'labelmap.txt'
 THRESHOLD = 0.5
 API_ENDPOINT = 'http://192.168.137.178:30070/api/images'
 INPUT_SIZE = (640, 640)
+OUTPUT_DIR = 'output_images'  # Directory to save output images
+
+# Ensure output directory exists
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # Load label map
 def load_labels(path):
@@ -30,33 +35,37 @@ def load_labels(path):
 # Convert single tensor to four tensors (boxes, classes, scores, num_detections)
 def convert_tensor_to_tensors(output_tensor, threshold=0.5):
     print(f"Output tensor shape: {output_tensor.shape}")
-    print(f"Output tensor sample: {output_tensor[:5]}")  # Print first few detections for debugging
+    print(f"Output tensor sample: {output_tensor[0, :, :5]}")  # Print first 5 detections
 
-    # Initialize outputs
     boxes = []
     classes = []
     scores = []
     num_detections = 0
 
     try:
-        # Assuming output_tensor is [num_detections, 6] with [y_min, x_min, y_max, x_max, score, class]
+        # Output tensor is [1, 7, 8400], transpose to [8400, 7] for easier processing
+        output_tensor = output_tensor[0].T  # Shape: [8400, 7]
         for detection in output_tensor:
             if len(detection) < 6:
                 print(f"Warning: Detection has unexpected format: {detection}")
                 continue
             score = float(detection[4])
             if score > threshold:
-                # Ensure coordinates are normalized (0-1)
-                box = [float(detection[0]), float(detection[1]), float(detection[2]), float(detection[3])]
+                # Convert [x_center, y_center, width, height] to [y_min, x_min, y_max, x_max]
+                x_center, y_center, width, height = map(float, detection[:4])
+                x_min = x_center - width / 2
+                x_max = x_center + width / 2
+                y_min = y_center - height / 2
+                y_max = y_center + height / 2
+                box = [y_min, x_min, y_max, x_max]
                 boxes.append(box)
-                classes.append(int(detection[5]))
+                classes.append(int(detection[5]))  # Class ID
                 scores.append(score)
                 num_detections += 1
     except Exception as e:
         print(f"Error processing output tensor: {e}")
         return np.array([]), np.array([]), np.array([]), np.array([0])
 
-    # Convert to numpy arrays
     boxes = np.array(boxes, dtype=np.float32)
     classes = np.array(classes, dtype=np.float32)
     scores = np.array(scores, dtype=np.float32)
@@ -141,6 +150,7 @@ def main():
 
     try:
         detection_made = False
+        frame_count = 0
         while not detection_made:
             # Capture image
             frame = camera.capture_array()
@@ -162,7 +172,6 @@ def main():
             try:
                 start_time = time.time()
                 interpreter.invoke()
-                # Copy output tensor to avoid reference issues
                 output_tensor = np.copy(common.output_tensor(interpreter, 0))
                 print(f"Inference time: {time.time() - start_time:.3f}s")
             except Exception as e:
@@ -203,8 +212,13 @@ def main():
 
                 detection_made = True  # Stop after first detection
 
-            # Display frame
-            cv2.imshow('Detection', frame_bgr)
+            # Save frame to disk instead of displaying
+            frame_count += 1
+            output_path = os.path.join(OUTPUT_DIR, f'detection_{frame_count}.jpg')
+            cv2.imwrite(output_path, frame_bgr)
+            print(f"Saved frame to {output_path}")
+
+            # Check for user interrupt
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
@@ -212,7 +226,6 @@ def main():
         print("Interrupted by user")
     finally:
         camera.stop()
-        cv2.destroyAllWindows()
         print("Cleanup completed")
 
 if __name__ == '__main__':
