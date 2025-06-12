@@ -26,7 +26,8 @@
                                         "type": "string",
                                         "enum": [
                                             "dog",
-                                            "cat"
+                                            "cat",
+                                            "bird"
                                         ]
                                     },
                                     "image": {
