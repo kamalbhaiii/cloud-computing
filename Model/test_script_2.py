@@ -16,7 +16,7 @@ MODEL_PATH = 'best_int8_edgetpu.tflite'
 LABEL_MAP_PATH = 'labelmap.txt'
 THRESHOLD = 0.5
 API_ENDPOINT = 'http://192.168.137.178:30070/api/images'
-INPUT_SIZE = (640, 640)  # Corrected to match model input
+INPUT_SIZE = (640, 640)
 
 # Load label map
 def load_labels(path):
@@ -29,21 +29,32 @@ def load_labels(path):
 
 # Convert single tensor to four tensors (boxes, classes, scores, num_detections)
 def convert_tensor_to_tensors(output_tensor, threshold=0.5):
-    # Assuming output_tensor is [num_detections, 6] with [y_min, x_min, y_max, x_max, score, class]
+    print(f"Output tensor shape: {output_tensor.shape}")
+    print(f"Output tensor sample: {output_tensor[:5]}")  # Print first few detections for debugging
+
+    # Initialize outputs
     boxes = []
     classes = []
     scores = []
     num_detections = 0
 
-    for detection in output_tensor:
-        score = detection[4]
-        if score > threshold:
-            # Normalize coordinates if needed
-            box = [detection[0], detection[1], detection[2], detection[3]]  # [y_min, x_min, y_max, x_max]
-            boxes.append(box)
-            classes.append(int(detection[5]))
-            scores.append(score)
-            num_detections += 1
+    try:
+        # Assuming output_tensor is [num_detections, 6] with [y_min, x_min, y_max, x_max, score, class]
+        for detection in output_tensor:
+            if len(detection) < 6:
+                print(f"Warning: Detection has unexpected format: {detection}")
+                continue
+            score = float(detection[4])
+            if score > threshold:
+                # Ensure coordinates are normalized (0-1)
+                box = [float(detection[0]), float(detection[1]), float(detection[2]), float(detection[3])]
+                boxes.append(box)
+                classes.append(int(detection[5]))
+                scores.append(score)
+                num_detections += 1
+    except Exception as e:
+        print(f"Error processing output tensor: {e}")
+        return np.array([]), np.array([]), np.array([]), np.array([0])
 
     # Convert to numpy arrays
     boxes = np.array(boxes, dtype=np.float32)
@@ -51,6 +62,7 @@ def convert_tensor_to_tensors(output_tensor, threshold=0.5):
     scores = np.array(scores, dtype=np.float32)
     num_detections = np.array([num_detections], dtype=np.float32)
 
+    print(f"Converted: {num_detections[0]} detections")
     return boxes, classes, scores, num_detections
 
 # Background process to send data to API
@@ -93,9 +105,11 @@ def main():
         interpreter.allocate_tensors()
         print("Interpreter initialized")
 
-        # Get input details
+        # Get input and output details
         input_details = interpreter.get_input_details()
+        output_details = interpreter.get_output_details()
         print(f"Model input details: {input_details}")
+        print(f"Model output details: {output_details}")
     except Exception as e:
         print(f"Error initializing interpreter: {e}")
         return
@@ -148,7 +162,8 @@ def main():
             try:
                 start_time = time.time()
                 interpreter.invoke()
-                output_tensor = common.output_tensor(interpreter, 0)
+                # Copy output tensor to avoid reference issues
+                output_tensor = np.copy(common.output_tensor(interpreter, 0))
                 print(f"Inference time: {time.time() - start_time:.3f}s")
             except Exception as e:
                 print(f"Error during inference: {e}")
@@ -157,7 +172,6 @@ def main():
             # Convert output to four tensors
             try:
                 boxes, classes, scores, num_detections = convert_tensor_to_tensors(output_tensor, THRESHOLD)
-                print(f"Detections: {int(num_detections[0])}")
             except Exception as e:
                 print(f"Error converting tensors: {e}")
                 continue
