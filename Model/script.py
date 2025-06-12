@@ -70,9 +70,6 @@ def initialize_tpu_model(model_file):
         # Log output details
         output_details = interpreter.get_output_details()
         logging.debug(f"Model output details: {output_details}")
-        if len(output_details) < 4:
-            logging.error(f"Model has {len(output_details)} output tensors, but 4 are expected.")
-            raise ValueError("Model does not have the expected number of output tensors.")
         return interpreter, width, height, input_scale, input_zero_point
     except Exception as e:
         logging.error(f"Failed to load model: {e}")
@@ -156,33 +153,38 @@ def run_inference(interpreter, frame_input):
     output = np.copy(common.output_tensor(interpreter, 0))
     inference_time = time.time() - inference_start
     logging.debug(f"Inference completed in {inference_time:.3f}s, output shape: {output.shape}")
+    logging.debug(f"Output tensor content: {output}")
     return output
 
 def process_output(interpreter, labels, thresholds, input_width, input_height):
-    """Process the model output tensors with Soft-NMS."""
+    """Process a single output tensor with Soft-NMS."""
     try:
         output_details = interpreter.get_output_details()
-        if len(output_details) < 4:
-            logging.error(f"Model has {len(output_details)} output tensors, expected at least 4.")
+        if len(output_details) != 1:
+            logging.error(f"Expected 1 output tensor, but model has {len(output_details)}.")
             return []
         
-        # Retrieve tensors
-        boxes = interpreter.get_tensor(output_details[0]["index"])
-        scores = interpreter.get_tensor(output_details[1]["index"])
-        class_ids = interpreter.get_tensor(output_details[2]["index"])
-        meta = interpreter.get_tensor(output_details[3]["index"])
-        
-        # Check tensor shapes
-        logging.debug(f"Boxes shape: {boxes.shape}, Scores shape: {scores.shape}, "
-                      f"Class IDs shape: {class_ids.shape}, Meta shape: {meta.shape}")
+        # Retrieve the single output tensor
+        output = interpreter.get_tensor(output_details[0]["index"])
+        logging.debug(f"Output tensor shape: {output.shape}, content: {output}")
         
         # Remove batch dimension if present
-        if len(boxes.shape) > 1 and boxes.shape[0] == 1:
-            boxes = boxes[0]
-            scores = scores[0]
-            class_ids = class_ids[0]
-            meta = meta[0]
+        if len(output.shape) > 2 and output.shape[0] == 1:
+            output = output[0]
         
+        # Assuming output shape is [N, K], where K includes boxes (4), score (1), class_id (1), meta (e.g., 4)
+        # Adjust indices based on your model's output structure
+        if output.shape[-1] < 10:  # Example: at least 10 values needed (4 boxes + 1 score + 1 class + 4 meta)
+            logging.error(f"Output tensor has insufficient dimensions: {output.shape}")
+            return []
+        
+        # Extract components (adjust indices based on actual tensor structure)
+        boxes = output[:, 0:4]  # First 4 values: cx, cy, w, h
+        scores = output[:, 4]   # 5th value: score
+        class_ids = output[:, 5]  # 6th value: class ID
+        meta = output[:, 6:10]    # Last 4 values: meta (adjust if meta has different size)
+        
+        # Apply confidence threshold
         conf_thresh = thresholds["confidence"]
         valid = scores >= conf_thresh
         if not np.any(valid):
@@ -194,6 +196,7 @@ def process_output(interpreter, labels, thresholds, input_width, input_height):
         class_ids = class_ids[valid]
         meta = meta[valid]
         
+        # Convert normalized coordinates to pixel values
         pixel_boxes = []
         for box in boxes:
             cx, cy, w, h = box
@@ -203,7 +206,8 @@ def process_output(interpreter, labels, thresholds, input_width, input_height):
             y_max = min(cy + h / 2, 1) * input_height
             pixel_boxes.append([x_min, y_min, x_max, y_max])
         
-        keep = soft_nms(pixel_boxes, scores, class_ids, metas=meta, iou_thresh=0.5, sigma=0.5, conf_thresh=conf_thresh)
+        # Apply Soft-NMS (meta is passed as a single value or array, adjust as needed)
+        keep = soft_nms(pixel_boxes, scores, class_ids, metas=meta[:, 0], iou_thresh=0.5, sigma=0.5, conf_thresh=conf_thresh)
         detections = []
         for box, score, class_id, meta_val in keep:
             label = labels.get(int(class_id), f"Class {int(class_id)}")
