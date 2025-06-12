@@ -16,7 +16,7 @@ MODEL_PATH = 'best_int8_edgetpu.tflite'
 LABEL_MAP_PATH = 'labelmap.txt'
 THRESHOLD = 0.5
 API_ENDPOINT = 'http://192.168.137.178:30070/api/images'
-INPUT_SIZE = (320, 320)  # Adjust based on your model's input size
+INPUT_SIZE = (640, 640)  # Corrected to match model input
 
 # Load label map
 def load_labels(path):
@@ -88,20 +88,36 @@ def main():
     print(f"Found EdgeTPU: {edge_tpus}")
 
     # Initialize interpreter
-    interpreter = edgetpu.make_interpreter(MODEL_PATH)
-    interpreter.allocate_tensors()
-    print("Interpreter initialized")
+    try:
+        interpreter = edgetpu.make_interpreter(MODEL_PATH)
+        interpreter.allocate_tensors()
+        print("Interpreter initialized")
+
+        # Get input details
+        input_details = interpreter.get_input_details()
+        print(f"Model input details: {input_details}")
+    except Exception as e:
+        print(f"Error initializing interpreter: {e}")
+        return
 
     # Load labels
-    labels = load_labels(LABEL_MAP_PATH)
-    print(f"Loaded labels: {labels}")
+    try:
+        labels = load_labels(LABEL_MAP_PATH)
+        print(f"Loaded labels: {labels}")
+    except Exception as e:
+        print(f"Error loading labels: {e}")
+        return
 
     # Initialize camera
-    camera = Picamera2()
-    camera_config = camera.create_preview_configuration(main={"size": INPUT_SIZE})
-    camera.configure(camera_config)
-    camera.start()
-    print("Camera initialized")
+    try:
+        camera = Picamera2()
+        camera_config = camera.create_preview_configuration(main={"size": INPUT_SIZE})
+        camera.configure(camera_config)
+        camera.start()
+        print("Camera initialized")
+    except Exception as e:
+        print(f"Error initializing camera: {e}")
+        return
 
     # Start background API sender
     api_queue = queue.Queue()
@@ -115,23 +131,36 @@ def main():
             # Capture image
             frame = camera.capture_array()
             frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            print("Captured frame")
+            print(f"Captured frame shape: {frame_rgb.shape}")
 
             # Preprocess image
-            resized = cv2.resize(frame_rgb, INPUT_SIZE)
-            input_data = np.expand_dims(resized, axis=0).astype(np.uint8)
-            common.set_input(interpreter, input_data)
-            print("Image preprocessed")
+            try:
+                resized = cv2.resize(frame_rgb, INPUT_SIZE)
+                input_data = np.expand_dims(resized, axis=0).astype(np.uint8)
+                print(f"Input data shape: {input_data.shape}")
+                common.set_input(interpreter, input_data)
+                print("Image preprocessed")
+            except Exception as e:
+                print(f"Error preprocessing image: {e}")
+                continue
 
             # Run inference
-            start_time = time.time()
-            interpreter.invoke()
-            output_tensor = common.output_tensor(interpreter, 0)
-            print(f"Inference time: {time.time() - start_time:.3f}s")
+            try:
+                start_time = time.time()
+                interpreter.invoke()
+                output_tensor = common.output_tensor(interpreter, 0)
+                print(f"Inference time: {time.time() - start_time:.3f}s")
+            except Exception as e:
+                print(f"Error during inference: {e}")
+                continue
 
             # Convert output to four tensors
-            boxes, classes, scores, num_detections = convert_tensor_to_tensors(output_tensor, THRESHOLD)
-            print(f"Detections: {int(num_detections[0])}")
+            try:
+                boxes, classes, scores, num_detections = convert_tensor_to_tensors(output_tensor, THRESHOLD)
+                print(f"Detections: {int(num_detections[0])}")
+            except Exception as e:
+                print(f"Error converting tensors: {e}")
+                continue
 
             # Process detections
             frame_bgr = cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2BGR)
@@ -165,6 +194,8 @@ def main():
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
+    except KeyboardInterrupt:
+        print("Interrupted by user")
     finally:
         camera.stop()
         cv2.destroyAllWindows()
