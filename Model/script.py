@@ -147,7 +147,7 @@ def run_inference(interpreter, frame_input):
     inference_start = time.time()
     common.set_input(interpreter, frame_input)
     interpreter.invoke()
-    output = np.copy(common.output)-tensor(interpreter, 0))
+    output = np.copy(common.output_tensor(interpreter, 0))
     inference_time = time.time() - inference_start
     logging.debug(f"Inference completed in {inference_time:.3f}s, output shape: {output.shape}")
     return output
