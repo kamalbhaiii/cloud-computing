@@ -276,9 +276,9 @@ def main():
     LABEL_FILE = "labelmap.txt"
     MODEL_FILE = "best_int8_edgetpu.tflite"
     THRESHOLDS = {
-        "confidence": 0.5,
-        "objectness": 0.4,
-        "class_score": 0.4
+        "confidence": 0.8,
+        "objectness": 0.8,
+        "class_score": 0.8
     }
     # Check for Edge TPU devices
     logger.debug("Listing connected Edge TPUs")
