@@ -67,6 +67,12 @@ def initialize_tpu_model(model_file):
         if input_scale == 0 and input_zero_point != 0:
             logging.error("Invalid input scale (0) for quantized model.")
             raise ValueError("Model quantization scale is zero. Ensure the model is properly quantized.")
+        # Log output details
+        output_details = interpreter.get_output_details()
+        logging.debug(f"Model output details: {output_details}")
+        if len(output_details) < 4:
+            logging.error(f"Model has {len(output_details)} output tensors, but 4 are expected.")
+            raise ValueError("Model does not have the expected number of output tensors.")
         return interpreter, width, height, input_scale, input_zero_point
     except Exception as e:
         logging.error(f"Failed to load model: {e}")
@@ -153,18 +159,41 @@ def run_inference(interpreter, frame_input):
     return output
 
 def process_output(interpreter, labels, thresholds, input_width, input_height):
-    """Process the 4 tensor outputs of the Edge TPU model with Soft-NMS."""
+    """Process the model output tensors with Soft-NMS."""
     try:
-        boxes = interpreter.get_tensor(interpreter.get_output_details()[0]["index"])[0]
-        scores = interpreter.get_tensor(interpreter.get_output_details()[1]["index"])[0]
-        class_ids = interpreter.get_tensor(interpreter.get_output_details()[2]["index"])[0]
-        meta = interpreter.get_tensor(interpreter.get_output_details()[3]["index"])[0]
+        output_details = interpreter.get_output_details()
+        if len(output_details) < 4:
+            logging.error(f"Model has {len(output_details)} output tensors, expected at least 4.")
+            return []
+        
+        # Retrieve tensors
+        boxes = interpreter.get_tensor(output_details[0]["index"])
+        scores = interpreter.get_tensor(output_details[1]["index"])
+        class_ids = interpreter.get_tensor(output_details[2]["index"])
+        meta = interpreter.get_tensor(output_details[3]["index"])
+        
+        # Check tensor shapes
+        logging.debug(f"Boxes shape: {boxes.shape}, Scores shape: {scores.shape}, "
+                      f"Class IDs shape: {class_ids.shape}, Meta shape: {meta.shape}")
+        
+        # Remove batch dimension if present
+        if len(boxes.shape) > 1 and boxes.shape[0] == 1:
+            boxes = boxes[0]
+            scores = scores[0]
+            class_ids = class_ids[0]
+            meta = meta[0]
+        
         conf_thresh = thresholds["confidence"]
         valid = scores >= conf_thresh
+        if not np.any(valid):
+            logging.debug("No detections above confidence threshold.")
+            return []
+        
         boxes = boxes[valid]
         scores = scores[valid]
         class_ids = class_ids[valid]
         meta = meta[valid]
+        
         pixel_boxes = []
         for box in boxes:
             cx, cy, w, h = box
@@ -173,6 +202,7 @@ def process_output(interpreter, labels, thresholds, input_width, input_height):
             x_max = min(cx + w / 2, 1) * input_width
             y_max = min(cy + h / 2, 1) * input_height
             pixel_boxes.append([x_min, y_min, x_max, y_max])
+        
         keep = soft_nms(pixel_boxes, scores, class_ids, metas=meta, iou_thresh=0.5, sigma=0.5, conf_thresh=conf_thresh)
         detections = []
         for box, score, class_id, meta_val in keep:
