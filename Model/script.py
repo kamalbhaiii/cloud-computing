@@ -62,9 +62,11 @@ def initialize_tpu_model(model_file):
         input_details = interpreter.get_input_details()[0]
         input_shape = input_details["shape"]
         height, width = input_shape[1], input_shape[2]
-        input_scale = input_details["quantization"][0]
-        input_zero_point = input_details["quantization"][1]
+        input_scale, input_zero_point = input_details["quantization"]
         logging.debug(f"Input shape: {input_shape}, scale: {input_scale}, zero_point: {input_zero_point}")
+        if input_scale == 0 and input_zero_point != 0:
+            logging.error("Invalid input scale (0) for quantized model.")
+            raise ValueError("Model quantization scale is zero. Ensure the model is properly quantized.")
         return interpreter, width, height, input_scale, input_zero_point
     except Exception as e:
         logging.error(f"Failed to load model: {e}")
@@ -86,7 +88,13 @@ def initialize_camera(width, height):
 def preprocess_frame(frame, input_scale, input_zero_point):
     """Preprocess frame for model input."""
     preprocess_start = time.time()
-    frame_input = (frame.astype(np.uint8) / input_scale + input_zero_point).astype(np.uint8)
+    if input_scale == 0 and input_zero_point == 0:
+        logging.debug("Non-quantized model detected, using raw frame")
+        frame_input = frame.astype(np.uint8)
+    else:
+        if input_scale == 0:
+            raise ValueError("Invalid input scale (0) for quantized model.")
+        frame_input = (frame.astype(np.float32) / input_scale + input_zero_point).astype(np.uint8)
     frame_input = np.expand_dims(frame_input, axis=0)
     preprocess_time = time.time() - preprocess_start
     logging.debug(f"Frame preprocessed in {preprocess_time:.3f}s")
@@ -139,7 +147,7 @@ def run_inference(interpreter, frame_input):
     inference_start = time.time()
     common.set_input(interpreter, frame_input)
     interpreter.invoke()
-    output = np.copy(common.output_tensor(interpreter, 0))
+    output = np.copy(common.output)-tensor(interpreter, 0))
     inference_time = time.time() - inference_start
     logging.debug(f"Inference completed in {inference_time:.3f}s, output shape: {output.shape}")
     return output
@@ -238,9 +246,13 @@ def main():
         "objectness": 0.4,
         "class_score": 0.4
     }
-    # List connected TPUs
+    # Check for Edge TPU devices
     logger.debug("Listing connected Edge TPUs")
-    for tpu in list_edge_tpus():
+    tpus = list_edge_tpus()
+    if not tpus:
+        logger.error("No Edge TPU devices found.")
+        sys.exit(1)
+    for tpu in tpus:
         logger.debug(tpu)
     # Initialize components
     try:
