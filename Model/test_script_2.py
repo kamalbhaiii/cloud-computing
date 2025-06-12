@@ -15,7 +15,7 @@ import os
 # Configuration
 MODEL_PATH = 'best_int8_edgetpu.tflite'
 LABEL_MAP_PATH = 'labelmap.txt'
-THRESHOLD = 0.5
+THRESHOLD = 0.8
 API_ENDPOINT = 'http://192.168.137.178:30070/api/images'
 INPUT_SIZE = (640, 640)
 OUTPUT_DIR = 'output_images'  # Directory to save output images
