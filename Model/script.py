@@ -86,7 +86,7 @@ def initialize_camera(width, height):
 def preprocess_frame(frame, input_scale, input_zero_point):
     """Preprocess frame for model input."""
     preprocess_start = time.time()
-    frame_input = (frame.astype(np.float32) / input_scale + input_zero_point).astype(np.uint8)
+    frame_input = (frame.astype(np.uint8) / input_scale + input_zero_point).astype(np.uint8)
     frame_input = np.expand_dims(frame_input, axis=0)
     preprocess_time = time.time() - preprocess_start
     logging.debug(f"Frame preprocessed in {preprocess_time:.3f}s")
