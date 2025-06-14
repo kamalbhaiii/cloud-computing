@@ -76,6 +76,7 @@ jobs:
           git config --global user.email 'action@github.com'
           git add k3s/Frontend.yaml
           git commit -m "Update Frontend.yaml with new Docker image tag"
+          git pull
           git push
 
       - name: Send notification to Telegram
