@@ -9,7 +9,7 @@ const imageController = require('../controllers/imageController');
 router.post(
     '/',
     upload.single('image'),
-    body('category').isIn(['dog', 'cat']),
+    body('category').isIn(['dog', 'cat', 'bird']),
     imageController.uploadImage
 );
 
@@ -18,7 +18,7 @@ router.get('/', imageController.getImages);
 router.put(
     '/:name',
     param('name').notEmpty(),
-    body('category').optional().isIn(['dog', 'cat']),
+    body('category').optional().isIn(['dog', 'cat', 'bird']),
     imageController.updateImage
 );
 

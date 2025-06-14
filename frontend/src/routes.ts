@@ -7,6 +7,10 @@ export const routes = [
         path: "/database",
         name: "Database",
     },
+    {
+        path: "/camera",
+        name: "Camera"
+    }
     // Don't include NotFound here
 ];
   
