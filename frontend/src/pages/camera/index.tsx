@@ -52,7 +52,7 @@ function App() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6">
-      <h1 className="text-2xl font-bold mb-4">Edge Inference Camera Stream</h1>
+      <h1 className="text-2xl font-bold mb-4">Edge Inference Camera Stream (Edge ICS)</h1>
       <video ref={videoRef} autoPlay width={640} height={640} className="border" />
       <canvas ref={canvasRef} width={640} height={640} hidden />
       <div className="mt-4">
