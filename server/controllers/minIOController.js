@@ -12,7 +12,12 @@ async function getMinIOImage (req, res) {
             responseType: 'stream'
         });
 
-        res.setHeader('Content-Type', response.headers['content-type']);
+        res.setHeader("Content-Type", response.headers["content-type"] || "image/jpeg");
+        res.setHeader("Access-Control-Allow-Origin", "*");
+        res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+        res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
+        res.setHeader("Cross-Origin-Opener-Policy", "same-origin"); 
+
         response.data.pipe(res);
     } catch (error) {
         console.error("Failed to fetch image:", error.message);
