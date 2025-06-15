@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const minIOController = require('../controllers/minIOController');
+const {query} = require('express-validator')
 
-router.get('/', minIOController.getMinIOImage);
+router.get('/', query("url"), minIOController.getMinIOImage);
 
 module.exports = router;
