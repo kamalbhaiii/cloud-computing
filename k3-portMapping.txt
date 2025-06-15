@@ -5,7 +5,7 @@
 30030: Prometheus
 30040: Grafana
 30050: PostgreSQL
-30060: 
+30060: Model
 30070: Server
 30080: 
 30090: 

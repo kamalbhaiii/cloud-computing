@@ -1,0 +1,84 @@
+name: Build and Deploy Model Docker Image
+
+on:
+  push:
+    branches:
+      - master
+      - ingress
+    paths:
+      - 'model/**'
+      - 'Dockerfile.model'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for model changes or Dockerfile.model
+        id: check_changes
+        run: |
+          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '^(model/|Dockerfile\.model$)'; then
+            echo "changes_detected=true" >> $GITHUB_OUTPUT
+          else
+            echo "changes_detected=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up QEMU
+        if: steps.check_changes.outputs.changes_detected == 'true'
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm
+
+      - name: Set up Docker Buildx
+        if: steps.check_changes.outputs.changes_detected == 'true'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to DockerHub
+        if: steps.check_changes.outputs.changes_detected == 'true'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Generate image tag
+        if: steps.check_changes.outputs.changes_detected == 'true'
+        id: generate_tag
+        run: |
+          TAG=$(date +'%Y%m%d')-$(git rev-parse --short HEAD)
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Build and push Docker image
+        if: steps.check_changes.outputs.changes_detected == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.model
+          platforms: linux/arm/v7
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/cloud-computing-model:${{ steps.generate_tag.outputs.tag }}
+
+      - name: Update Model.yaml
+        if: steps.check_changes.outputs.changes_detected == 'true'
+        run: |
+          sed -i "s|image: ${{ secrets.DOCKER_HUB_USERNAME }}/cloud-computing-model:.*|image: ${{ secrets.DOCKER_HUB_USERNAME }}/cloud-computing-model:${{ steps.generate_tag.outputs.tag }}|" k3s/Model.yaml
+          git config --global user.name 'GitHub Action'
+          git config --global user.email 'action@github.com'
+          git add k3s/Model.yaml
+          git commit -m "Update Model.yaml with new Docker image tag"
+          git pull --rebase
+          git push
+
+      - name: Send notification to Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          MESSAGE="📦 *Model Image Updated* 📦%0ADocker image for the model has been built and pushed.%0AUpdated *Model.yaml* in K3s manifests with the new tag.%0AYou may now trigger Jenkins build for model deployment. 🚀"
+          curl -s -X POST https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage \
+            -d chat_id=${TELEGRAM_CHAT_ID} \
+            -d text="$MESSAGE" \
+            -d parse_mode=Markdown
