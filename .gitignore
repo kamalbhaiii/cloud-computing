@@ -7,6 +7,6 @@ token.*
 server/target/
 backup
 pred_*.*
-__pycache__
+*/__pycache__
 /*-ignore*
 */node_modules
