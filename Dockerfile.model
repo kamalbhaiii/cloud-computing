@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y \
 COPY Model /app
 
 # Install Python dependencies
-RUN zpip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 RUN mkdir -p /app/temp
 
