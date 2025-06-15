@@ -1,4 +1,4 @@
-FROM --platform=linux/arm/v7 python:3.9-bookworm
+FROM python:3.9-slim
 
 WORKDIR /app
 
@@ -10,6 +10,8 @@ RUN apt-get update && apt-get install -y \
     libffi-dev \
     python3-dev \
     git \
+    libgl1 \
+    libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy your code
