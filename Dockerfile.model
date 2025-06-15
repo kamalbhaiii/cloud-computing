@@ -1,9 +1,21 @@
-FROM python:3.9-bookworm
+FROM --platform=linux/arm/v7 python:3.9-bookworm
 
 WORKDIR /app
 
+# Install required system packages
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libjpeg-dev \
+    zlib1g-dev \
+    libffi-dev \
+    python3-dev \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy your code
 COPY Model /app
 
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 RUN mkdir -p /app/temp
