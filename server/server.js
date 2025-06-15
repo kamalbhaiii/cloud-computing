@@ -9,6 +9,7 @@ const env = require('./config/env.json');
 const logger = require('./middlewares/logger');
 const errorHandler = require('./middlewares/errorHandler');
 const imageRoutes = require('./routes/imageRoutes');
+const minIORoutes = require('./routes/minIORoutes');
 const minioService = require('./services/minioService');
 const db = require('./config/db');
 
@@ -21,6 +22,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(logger);
 
 app.use('/api/images', imageRoutes);
+app.use('/api/minio', minIORoutes);
 app.get('/api/test', (req,res) => {
     res.status(200).send({
         message:"Backend is live!"

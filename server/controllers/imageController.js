@@ -43,7 +43,15 @@ async function uploadImage(req, res) {
 async function getImages(req, res) {
     try {
         const images = await imageModel.getAllImages();
-        res.status(200).json(success(images));
+
+        const proxiedImages = images.map((img) => {
+            return {
+                ...img,
+                url: `https://server.local/api/minio?url=${encodeURIComponent(img.url)}`
+            };
+        });
+
+        res.status(200).json(success(proxiedImages));
     } catch (err) {
         res.status(500).json(error('Failed to fetch images'));
     }
