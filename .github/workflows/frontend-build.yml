@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - ingress
     paths:
       - 'frontend/**'
       - 'Dockerfile.frontend'
