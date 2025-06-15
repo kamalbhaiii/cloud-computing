@@ -1,5 +1,5 @@
 # Use ARMv7 compatible Python base image
-FROM --platform=linux/arm/v7 python:3.9-alpine
+FROM --platform=linux/arm/v7 python:3.9-slim
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
