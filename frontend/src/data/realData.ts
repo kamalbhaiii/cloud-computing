@@ -35,7 +35,7 @@ export async function fetchBackendImages(): Promise<ImageItem[]> {
 
 
 export async function deleteBackendImage(name: string): Promise<void> {
-    const res = await fetch(`${config.BACKEND_END_POINT}:${config.BACKEND_PORT}/api/images/${name}`, {
+    const res = await fetch(`${config.BACKEND_END_POINT}:${config.BACKEND_PORT ? config.BACKEND_PORT : ''}/api/images/${name}`, {
         method: "DELETE",
     });
 
