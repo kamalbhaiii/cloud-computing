@@ -1,5 +1,5 @@
 # Use ARMv7 compatible Python base image
-FROM arm32v7/python:3.9-alpine
+FROM python:3.9-alpine
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
