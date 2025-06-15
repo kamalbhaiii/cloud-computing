@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-COPY model /app
+COPY Model /app
 COPY requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
