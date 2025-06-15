@@ -9,7 +9,5 @@ python-dotenv==1.1.0
 python-engineio==4.12.2
 python-socketio==5.13.0
 requests==2.32.3
-tensorboard-data-server==0.7.2
-tensorflow==2.13.0
 tflite-runtime==2.5.0.post1
 uuid==1.30
