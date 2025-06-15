@@ -1,4 +1,4 @@
-FROM python:3.9-slim
+FROM arm32v7/python:3.9-slim
 
 WORKDIR /app
 
