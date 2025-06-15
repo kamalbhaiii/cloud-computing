@@ -4,7 +4,6 @@ Flask-SocketIO==5.5.1
 inference-sdk==0.50.4
 load-dotenv==0.1.0
 pillow==11.2.1
-pycoral==2.0.0
 python-dateutil==2.9.0.post0
 python-dotenv==1.1.0
 python-engineio==4.12.2
