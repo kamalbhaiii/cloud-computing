@@ -28,7 +28,7 @@ function App() {
 
       ctx.drawImage(videoRef.current, 0, 0, 640, 640);
       const dataUrl = canvasRef.current.toDataURL("image/jpeg");
-      const base64 = dataUrl.split(",")[1]; // remove "data:image/jpeg;base64,"
+      const base64 = dataUrl.split(",")[1];
       socket.emit("frame", base64);
     };
 
