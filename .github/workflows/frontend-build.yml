@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - ingress
     paths:
       - 'frontend/**'
       - 'Dockerfile.frontend'
@@ -75,6 +74,7 @@ jobs:
           sed -i "s|image: ${{ secrets.DOCKER_HUB_USERNAME }}/cloud-computing-frontend:.*|image: ${{ secrets.DOCKER_HUB_USERNAME }}/cloud-computing-frontend:${{ steps.generate_tag.outputs.tag }}|" k3s/Frontend.yaml
           git config --global user.name 'GitHub Action'
           git config --global user.email 'action@github.com'
+          git config pull.rebase false
           git add k3s/Frontend.yaml
           git commit -m "Update Frontend.yaml with new Docker image tag"
           git pull
