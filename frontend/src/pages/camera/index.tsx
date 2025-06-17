@@ -32,7 +32,7 @@ function App() {
       socket.emit("frame", base64);
     };
 
-    const interval = setInterval(sendFrame, 5000); // 1 frame/sec
+    const interval = setInterval(sendFrame, 5000);
     return () => clearInterval(interval);
   }, [streaming]);
 
@@ -63,7 +63,7 @@ function App() {
           {streaming ? "Stop" : "Start"} Camera
         </button>
       </div>
-      {prediction && <p className="mt-4 text-xl">Prediction: {prediction}</p>}
+      {prediction && <p className="mt-4 text-xl">Model has Predicted: {prediction}</p>}
     </div>
   );
 }
