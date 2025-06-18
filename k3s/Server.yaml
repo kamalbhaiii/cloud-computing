@@ -16,7 +16,7 @@ spec:
       nodeName: worker-node-3
       containers:
       - name: server
-        image: kamalbhaiii/cloud-computing-server:20250616-0e05941
+        image: kamalbhaiii/cloud-computing-server:20250618-db0a8d5
         ports:
         - containerPort: 5000
 ---
