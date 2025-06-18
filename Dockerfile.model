@@ -2,7 +2,6 @@ FROM --platform=linux/arm/v7 python:3.9-slim
 
 WORKDIR /app
 
-# Install required system packages
 RUN apt-get update && apt-get install -y \
     build-essential \
     libjpeg-dev \
@@ -14,11 +13,9 @@ RUN apt-get update && apt-get install -y \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy your code
 COPY Model /app
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --prefer-binary -r requirements.txt
 
 RUN mkdir -p /app/temp
 
