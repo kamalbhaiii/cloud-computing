@@ -13,7 +13,7 @@ spec:
       labels:
         app: model
     spec:
-      nodeName: master-node
+      nodeName: worker-node-4-080c5200
       containers:
       - name: model
         image: kamalbhaiii/model:latest
