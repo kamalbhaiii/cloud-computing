@@ -16,7 +16,7 @@ spec:
       nodeName: worker-node-4-080c5200
       containers:
       - name: model
-        image: kamalbhaiii/model:latest
+        image: kamalbhaiii/cloud-computing-model:latest
         ports:
         - containerPort: 5000
 ---
