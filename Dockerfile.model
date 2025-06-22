@@ -4,8 +4,10 @@ WORKDIR /app
 
 COPY Model /app
 
-RUN pip install --no-cache-dir --prefer-binary -r requirements.txt
+RUN python -m venv /app/venv
+
+RUN /app/venv/bin/pip install --no-cache-dir --prefer-binary -r requirements.txt
 
 RUN mkdir -p /app/temp
 
-CMD ["python", "app-robo.py"]
+CMD ["/app/venv/bin/python", "app-robo.py"]
