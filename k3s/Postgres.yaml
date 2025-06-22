@@ -12,7 +12,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: postgresql-clusterip-service
+  name: postgresql-service
 spec:
   selector:
     app: postgresql
