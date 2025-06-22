@@ -89,7 +89,6 @@ spec:
   - port: 9001
     targetPort: 9001
     name: console
-    nodePort: 30020
   selector:
     app: minio
-  type: NodePort
+  type: ClusterIP
