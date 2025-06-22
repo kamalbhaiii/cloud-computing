@@ -21,19 +21,6 @@ spec:
       targetPort: 5432
   type: ClusterIP
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: postgresql-nodeport-service
-spec:
-  type: NodePort
-  ports:
-    - port: 5432
-      targetPort: 5432
-      nodePort: 30050
-  selector:
-    app: postgresql
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
