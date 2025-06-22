@@ -12,7 +12,19 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: postgresql-service
+  name: postgresql-clusterip-service
+spec:
+  selector:
+    app: postgresql
+  ports:
+    - port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgresql-nodeport-service
 spec:
   type: NodePort
   ports:
