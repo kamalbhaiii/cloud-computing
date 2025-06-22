@@ -85,7 +85,6 @@ spec:
   - port: 9000
     targetPort: 9000
     name: api
-    nodePort: 30010
   - port: 9001
     targetPort: 9001
     name: console
