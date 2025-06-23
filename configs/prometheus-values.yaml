@@ -3,8 +3,18 @@ server:
   nodeSelector:
     kubernetes.io/hostname: master-node
   service:
-    type: NodePort
-    nodePort: 30030
+    type: ClusterIP
+    port: 80
+  ingress:
+    enabled: true
+    annotations:
+      kubernetes.io/ingress.class: "traefik"
+    paths:
+      - /
+    hosts:
+      - prometheus.local
+    secretName:
+      - prometheus-tls
 
 alertmanager:
   enabled: true
