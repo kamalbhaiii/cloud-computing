@@ -13,7 +13,7 @@ spec:
       labels:
         app: model
     spec:
-      nodeName: worker-node-4-080c5200
+      nodeName: worker-node-1
       containers:
       - name: model
         image: kamalbhaiii/cloud-computing-model:1-armv7
