@@ -1,5 +1,8 @@
 {
-    "BACKEND_END_POINT": "https://server.local",
+    "BACKEND_END_POINT": "http://server.local",
+    "SECURE_BACKEND_END_POINT":"https://server.local",
+    "MODEL_END_POINT": "http://model.local",
+    "SECURE_MODEL_END_POINT": "https://model.local",
     "BACKEND_PORT": "",
     "FEATURE_FLAG": false,
     "WEB_NAME": "Edge Computing Dashboard"

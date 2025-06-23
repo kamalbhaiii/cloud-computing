@@ -1,3 +1,5 @@
+const protocol = window.location.protocol;
+
 export const routes = [
     {
         path: "/",
@@ -7,10 +9,14 @@ export const routes = [
         path: "/database",
         name: "Database",
     },
+    ...(protocol === "https:"
+        ? [{
+            path: "/camera",
+            name: "Camera",
+        }]
+        : []),
     {
-        path: "/camera",
-        name: "Camera"
-    }
-    // Don't include NotFound here
+        path: "http://grafana.local",
+        name: "Monitoring Dashboard",
+    },
 ];
-  

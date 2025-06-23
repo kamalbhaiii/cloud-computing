@@ -3,7 +3,9 @@ import config from '../config/envConfig'
 
 export async function fetchBackendImages(): Promise<ImageItem[]> {
     try {
-        const response = await fetch(`${config.BACKEND_END_POINT}:${config.BACKEND_PORT}/api/images`);
+        const protocol = window.location.protocol;
+        console.log(protocol)
+        const response = await fetch(`${protocol == 'https:' ? config.SECURE_BACKEND_END_POINT : config.BACKEND_END_POINT}:${config.BACKEND_PORT}/api/images`);
         const result = await response.json();
 
         if (result.status !== "success" || !Array.isArray(result.data)) {

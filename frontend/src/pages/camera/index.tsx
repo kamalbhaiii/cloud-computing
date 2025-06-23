@@ -1,7 +1,9 @@
+import config from "@/config/envConfig";
 import { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
 
-const socket = io("https://model.local");
+const protocol = window.location.protocol;
+const socket = io(protocol == 'https:' ? config.SECURE_MODEL_END_POINT : config.MODEL_END_POINT);
 
 function App() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
