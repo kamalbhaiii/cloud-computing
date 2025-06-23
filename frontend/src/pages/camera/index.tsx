@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
 
-const socket = io("https://model-service.default.svc.local");
+const socket = io("https://model.local");
 
 function App() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
