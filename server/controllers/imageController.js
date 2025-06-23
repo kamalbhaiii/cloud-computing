@@ -47,7 +47,7 @@ async function getImages(req, res) {
         const proxiedImages = images.map((img) => {
             return {
                 ...img,
-                url: `https://server.local/api/minio?url=${encodeURIComponent(img.url)}`
+                url: `${req.protocol}://server.local/api/minio?url=${encodeURIComponent(img.url)}`
             };
         });
 
