@@ -16,7 +16,7 @@ spec:
       nodeName: worker-node-1
       containers:
       - name: model
-        image: kamalbhaiii/cloud-computing-model:2-arm64v8
+        image: kamalbhaiii/cloud-computing-model:3-arm64v8
         ports:
         - containerPort: 5000
 ---
