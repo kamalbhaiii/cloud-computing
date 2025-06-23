@@ -4,7 +4,8 @@ server:
     kubernetes.io/hostname: master-node
   service:
     type: ClusterIP
-    port: 80
+    port: 3050
+    targetPort: 3050
   ingress:
     enabled: true
     annotations:
