@@ -1,19 +1,22 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useImageStore } from "../../store/imageStore";
-import { fetchBackendImages } from "../../data/realData"; // <-- fetch from backend now
+import { fetchBackendImages, deleteBackendImage } from "../../data/realData";
 import SearchBar from "../../components/searchBar/index";
 import TableRow from "../../components/tableRow/index";
 import TableSkeleton from "../../components/tableSkeleton/index";
-import { deleteBackendImage } from "../../data/realData";
+import MetadataModal from "../../components/metadata"; // <-- Modal for editing metadata
 
 export default function Database() {
   const { images, setImages, deleteImage, updateImage } = useImageStore();
+
   const [filtered, setFiltered] = useState(images.slice(0, 20));
   const [searchTerm, setSearchTerm] = useState("");
   const [sortField, setSortField] = useState<keyof typeof images[0]>("id");
   const [sortAsc, setSortAsc] = useState(true);
   const [hasMore, setHasMore] = useState(true);
   const observer = useRef<IntersectionObserver | null>(null);
+
+  const [editingImageId, setEditingImageId] = useState<null | number>(null); // <-- Modal state
   const [alert, setAlert] = useState({
     show: false,
     message: "",
@@ -25,7 +28,6 @@ export default function Database() {
     setTimeout(() => setAlert((a) => ({ ...a, show: false })), 3000);
   };
 
-  // Fetch images from backend once on mount
   useEffect(() => {
     if (images.length === 0) {
       fetchBackendImages()
@@ -38,7 +40,6 @@ export default function Database() {
     }
   }, [images.length, setImages]);
 
-  // Search + Sort + Slice logic
   useEffect(() => {
     let result = [...images];
 
@@ -108,11 +109,10 @@ export default function Database() {
     [hasMore, loadMore]
   );
 
-  // Edit and Delete handlers
   const handleDelete = async (id: number) => {
     const image = images.find((img) => img.id === id);
     if (!image) return;
-  
+
     try {
       await deleteBackendImage(image.name);
       deleteImage(id);
@@ -122,7 +122,7 @@ export default function Database() {
       showAlert("Failed to delete image", "error");
     }
   };
-  
+
   const handleEdit = (id: number, newMeta: string) => {
     updateImage(id, { metadata: newMeta });
     showAlert("Metadata updated", "success");
@@ -134,6 +134,7 @@ export default function Database() {
         Image Metadata Table
       </h2>
       <SearchBar onSearch={(term) => setSearchTerm(term)} />
+
       <div className="overflow-x-auto mt-4 rounded shadow border dark:border-gray-700">
         <table className="min-w-full text-sm text-left dark:text-white">
           <thead className="bg-gray-100 dark:bg-gray-800">
@@ -143,7 +144,9 @@ export default function Database() {
                   key={field}
                   onClick={() => {
                     setSortField(field as keyof typeof images[0]);
-                    setSortAsc((prev) => (sortField === field ? !prev : true));
+                    setSortAsc((prev) =>
+                      sortField === field ? !prev : true
+                    );
                   }}
                   className="p-2 cursor-pointer select-none hover:bg-gray-200 dark:hover:bg-gray-700"
                 >
@@ -164,15 +167,7 @@ export default function Database() {
                     item={item}
                     metadata={item.metadata}
                     onDelete={() => handleDelete(item.id)}
-                    onEdit={() => {
-                      const newMeta = prompt(
-                        "Edit metadata",
-                        item.metadata
-                      );
-                      if (newMeta !== null && newMeta.trim() !== "") {
-                        handleEdit(item.id, newMeta.trim());
-                      }
-                    }}
+                    onEdit={() => setEditingImageId(item.id)}
                   />
                 </tr>
               ) : (
@@ -181,12 +176,7 @@ export default function Database() {
                   item={item}
                   metadata={item.metadata}
                   onDelete={() => handleDelete(item.id)}
-                  onEdit={() => {
-                    const newMeta = prompt("Edit metadata", item.metadata);
-                    if (newMeta !== null && newMeta.trim() !== "") {
-                      handleEdit(item.id, newMeta.trim());
-                    }
-                  }}
+                  onEdit={() => setEditingImageId(item.id)}
                 />
               )
             )}
@@ -195,7 +185,21 @@ export default function Database() {
         </table>
       </div>
 
-      {/* Alert component for showing success/error messages */}
+      {/* Metadata Modal */}
+      {editingImageId !== null && (
+        <MetadataModal
+          currentMeta={
+            images.find((i) => i.id === editingImageId)?.metadata || ""
+          }
+          onClose={() => setEditingImageId(null)}
+          onSave={(newMeta) => {
+            handleEdit(editingImageId, newMeta);
+            setEditingImageId(null);
+          }}
+        />
+      )}
+
+      {/* Alert */}
       {alert.show && (
         <div
           className={`fixed bottom-4 right-4 px-4 py-2 rounded shadow ${

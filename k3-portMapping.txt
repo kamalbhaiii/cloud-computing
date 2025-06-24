@@ -1,11 +1,4 @@
-8080 : Jenkins
-30000: Frontend
-30010: MinIO (API)
-30020: MinIO (Console)
-30030: Prometheus
-30040: Grafana
-30050: PostgreSQL
-30060: Model
-30070: Server
-30080: 
-30090: 
+http://192.168.137.178:8080 -> Jenkins
+http://frontend.local -> Frontend Dashboard
+http://server.local -> Server
+http://grafana.local -> Monitoring Dashboard

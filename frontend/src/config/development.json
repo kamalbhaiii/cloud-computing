@@ -1,9 +1,9 @@
 {
-    "BACKEND_END_POINT":"http://server.local",
+    "BACKEND_END_POINT":"http://localhost",
     "SECURE_BACKEND_END_POINT":"https://server.local",
     "MODEL_END_POINT": "http://model.local",
     "SECURE_MODEL_END_POINT": "https://model.local",
-    "BACKEND_PORT":"",
+    "BACKEND_PORT":"5000",
     "FEATURE_FLAG": true,
     "WEB_NAME":"Cloud Computing Dashboard"
 }
