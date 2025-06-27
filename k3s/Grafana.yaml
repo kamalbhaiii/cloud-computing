@@ -11,9 +11,7 @@ spec:
   persistentVolumeReclaimPolicy: Retain
   hostPath:
     path: /mnt/data/grafana
-
 ---
-
 # PersistentVolumeClaim
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -27,9 +25,7 @@ spec:
     requests:
       storage: 5Gi
   storageClassName: ""
-
 ---
-
 # Deployment
 apiVersion: apps/v1
 kind: Deployment
@@ -47,6 +43,8 @@ spec:
         app: grafana
     spec:
       nodeName: master-node
+      securityContext:
+        fsGroup: 472
       containers:
       - name: grafana
         image: grafana/grafana:9.5.2
@@ -62,9 +60,7 @@ spec:
       - name: grafana-storage
         persistentVolumeClaim:
           claimName: grafana-pvc
-
 ---
-
 # Service
 apiVersion: v1
 kind: Service
