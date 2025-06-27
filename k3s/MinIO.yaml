@@ -84,12 +84,10 @@ spec:
   ports:
   - port: 9000
     targetPort: 9000
-    nodePort: 30050
     name: api
   - port: 9001
     targetPort: 9001
-    nodePort: 30051
     name: console
   selector:
     app: minio
-  type: NodePort
+  type: ClusterIP
