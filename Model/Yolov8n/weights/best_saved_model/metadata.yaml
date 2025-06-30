@@ -1,0 +1,24 @@
+description: Ultralytics best model trained on /content/drive/MyDrive/animals/config.yaml
+author: Ultralytics
+date: '2025-06-29T11:29:30.145461'
+version: 8.3.160
+license: AGPL-3.0 License (https://ultralytics.com/license)
+docs: https://docs.ultralytics.com
+stride: 32
+task: detect
+batch: 1
+imgsz:
+- 640
+- 640
+names:
+  0: Cat
+  1: Dog
+  2: Bird
+  3: Person
+args:
+  batch: 1
+  fraction: 1.0
+  half: false
+  int8: true
+  nms: false
+channels: 3
