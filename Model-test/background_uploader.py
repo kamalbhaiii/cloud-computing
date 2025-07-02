@@ -4,7 +4,7 @@ import requests
 
 def upload_image_to_db(image_path: str, category: str):
     print(image_path, category)
-    url = "http://192.168.137.178:30070/api/images"
+    url = "http://server.local/api/images"
 
     mime_type, _ = mimetypes.guess_type(image_path)
     if mime_type is None:
