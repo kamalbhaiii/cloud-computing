@@ -63,6 +63,7 @@ try:
 
         # Get output and apply simple postprocessing
         output_data = interpreter.get_tensor(output_details[0]['index'])[0]
+        print(output_data)
         detections = []
         threshold = 0.1  # Confidence threshold
 
