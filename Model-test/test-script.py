@@ -1,11 +1,20 @@
 import numpy as np
 import time
-import csv
 from datetime import datetime
 from picamera2 import Picamera2
 from PIL import Image
+from threading import Thread
 import os
 import tflite_runtime.interpreter as tflite
+from background_uploader import upload_image_to_db
+
+def background_upload(image_path, category):
+    # This runs in a separate thread to avoid blocking main event loop
+    upload_image_to_db(image_path, category)
+
+# Create temp detection image folder
+TEMP_DIR = "temp"
+os.makedirs(TEMP_DIR, exist_ok=True)
 
 # Load the label map
 label_map = {}
@@ -33,15 +42,6 @@ picam2.configure(config)
 picam2.start()
 print("Pi Camera initialized.")
 
-# CSV file for automatic saving
-csv_filename = "detections.csv"
-write_header = not os.path.isfile(csv_filename)
-
-with open(csv_filename, mode='a', newline='') as csvfile:
-    writer = csv.writer(csvfile)
-    if write_header:
-        writer.writerow(["timestamp", "label", "score", "inference_time"])
-
 try:
     while True:
         # Capture frame
@@ -51,42 +51,36 @@ try:
         # Resize and preprocess
         pil_image = Image.fromarray(rgb)
         resized = pil_image.resize((input_w, input_h), Image.Resampling.LANCZOS)
-        input_tensor = np.expand_dims(np.array(resized, dtype=np.float32) / 255.0, axis=0)  # Normalize to 0-1
+        input_tensor = np.expand_dims(np.array(resized, dtype=np.float32) / 255.0, axis=0)  # Normalize
 
-        # Set input and run inference
+        # Run inference
         interpreter.set_tensor(input_details[0]['index'], input_tensor)
         start_time = time.time()
         interpreter.invoke()
         inference_time = time.time() - start_time
 
-        # Get output tensors (assuming typical YOLO-like output structure)
+        # Get output and apply simple postprocessing
         output_data = interpreter.get_tensor(output_details[0]['index'])[0]
-
-        # Simple postprocessing (this depends on your model output format!)
         detections = []
         threshold = 0.1  # Confidence threshold
+
         for obj in output_data:
-            if obj[4] > threshold:  # obj[4] is confidence
-                class_id = int(np.argmax(obj[5:]))  # class probabilities start at index 5
+            if obj[4] > threshold:  # confidence score
+                class_id = int(np.argmax(obj[5:]))
                 score = obj[4]
                 detections.append((class_id, score))
 
-        # Save to CSV
-        timestamp = datetime.now().isoformat()
-        with open(csv_filename, mode='a', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            if detections:
-                for class_id, score in detections:
-                    label = label_map.get(class_id, str(class_id))
-                    writer.writerow([timestamp, label, f"{score:.2f}", f"{inference_time:.4f}"])
-            else:
-                writer.writerow([timestamp, "None", "0.00", f"{inference_time:.4f}"])
-
-        # Debug print
+        # Handle detections
         if detections:
+            # Save image temporarily
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+            file_path = os.path.join(TEMP_DIR, f"{timestamp}.jpg")
+            pil_image.save(file_path)
+
             for class_id, score in detections:
                 label = label_map.get(class_id, str(class_id))
                 print(f"Detected: {label.capitalize()} | Confidence: {score:.2f}")
+                Thread(target=background_upload, args=(file_path, label), daemon=True).start()
         else:
             print("No objects detected.")
 
