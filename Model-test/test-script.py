@@ -10,6 +10,8 @@ from background_uploader import upload_image_to_db
 
 def background_upload(image_path, category):
     # This runs in a separate thread to avoid blocking main event loop
+    print(image_path)
+    print(category)
     upload_image_to_db(image_path, category)
 
 # Create temp detection image folder
