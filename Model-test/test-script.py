@@ -5,7 +5,7 @@ from datetime import datetime
 from picamera2 import Picamera2
 from PIL import Image
 import os
-import tensorflow.lite as tflite
+import tflite_runtime.interpreter as tflite
 
 # Load the label map
 label_map = {}
