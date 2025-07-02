@@ -9,7 +9,6 @@ import tflite_runtime.interpreter as tflite
 from background_uploader import upload_image_to_db
 
 def background_upload(image_path, category):
-    # This runs in a separate thread to avoid blocking main event loop
     print(image_path)
     print(category)
     upload_image_to_db(image_path, category)
@@ -61,28 +60,32 @@ try:
         interpreter.invoke()
         inference_time = time.time() - start_time
 
-        # Get output and apply simple postprocessing
-        output_data = interpreter.get_tensor(output_details[0]['index'])[0]
-        print(output_data.shape)
+        # Postprocessing for YOLOv8-style TFLite output
+        output_data = interpreter.get_tensor(output_details[0]['index'])[0]  # Shape: (7, 8400)
+        print("Raw output shape:", output_data.shape)
+
+        predictions = output_data.transpose()  # Shape becomes (8400, 7)
+        threshold = 0.3  # Confidence threshold
         detections = []
-        threshold = 0.1  # Confidence threshold
 
-        for obj in output_data:
-            if obj[4] > threshold:  # confidence score
-                class_id = int(np.argmax(obj[5:]))
-                score = obj[4]
-                detections.append((class_id, score))
+        for pred in predictions:
+            x, y, w, h = pred[:4]
+            objectness = pred[4]
+            class_id = int(pred[5])
+            confidence = pred[6]
 
-        # Handle detections
+            if confidence > threshold:
+                detections.append((class_id, confidence))
+
+        # Save image only once if at least one object is detected
         if detections:
-            # Save image temporarily
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
             file_path = os.path.join(TEMP_DIR, f"{timestamp}.jpg")
             pil_image.save(file_path)
 
-            for class_id, score in detections:
-                label = label_map.get(class_id, str(class_id))
-                print(f"Detected: {label.capitalize()} | Confidence: {score:.2f}")
+            for class_id, confidence in detections:
+                label = label_map.get(class_id, f"class_{class_id}")
+                print(f"Detected: {label.capitalize()} | Confidence: {confidence:.2f}")
                 Thread(target=background_upload, args=(file_path, label), daemon=True).start()
         else:
             print("No objects detected.")
