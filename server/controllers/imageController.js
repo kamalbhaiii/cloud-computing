@@ -12,6 +12,8 @@ async function uploadImage(req, res) {
         return res.status(400).json(error('Invalid request parameters', 400));
     }
 
+    console.log(req.body)
+
     const { category } = req.body;
     const file = req.file;
 
