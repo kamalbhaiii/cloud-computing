@@ -3,7 +3,6 @@ import os
 import requests
 
 def upload_image_to_db(image_path: str, category: str):
-    print(image_path, category)
     url = "http://server.local/api/images"
 
     mime_type, _ = mimetypes.guess_type(image_path)

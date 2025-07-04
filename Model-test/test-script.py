@@ -9,8 +9,6 @@ import tflite_runtime.interpreter as tflite
 from background_uploader import upload_image_to_db
 
 def background_upload(image_path, category):
-    print(image_path)
-    print(category)
     upload_image_to_db(image_path, category)
 
 # Create temp detection image folder
@@ -65,8 +63,9 @@ try:
         print("Raw output shape:", output_data.shape)
 
         predictions = output_data.transpose()  # Shape becomes (8400, 7)
-        threshold = 0.4  
-        detections = []
+        threshold = 0.4
+        best_detection = None
+        max_confidence = 0.0
 
         for pred in predictions:
             x, y, w, h = pred[:4]
@@ -74,25 +73,28 @@ try:
             class_id = int(pred[5])
             confidence = pred[6]
 
-            if confidence > threshold:
-                detections.append((class_id, confidence))
+            if confidence > threshold and confidence > max_confidence:
+                max_confidence = confidence
+                best_detection = (class_id, confidence)
 
-        # Save image only once if at least one object is detected
-        if detections:
+        # Upload only if the best detection exists
+        if best_detection:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
             file_path = os.path.join(TEMP_DIR, f"{timestamp}.jpg")
             pil_image.save(file_path)
 
-            for class_id, confidence in detections:
-                label = label_map.get(class_id, f"class_{class_id}")
-                print(f"Detected: {label.capitalize()} | Confidence: {confidence:.2f}")
-                Thread(target=background_upload, args=(file_path, label), daemon=True).start()
+            class_id, confidence = best_detection
+            label = label_map.get(class_id, f"class_{class_id}")
+            print(f"Detected: {label.capitalize()} | Confidence: {confidence:.2f}")
+            Thread(target=background_upload, args=(file_path, label), daemon=True).start()
         else:
             print("No objects detected.")
 
         print(f"Inference time: {inference_time:.4f} seconds")
         print("-" * 50)
-        time.sleep(2.0)
+        print("Next frame capture after 5 seconds.")
+        print("-" * 50)
+        time.sleep(5.0)
 
 except KeyboardInterrupt:
     print("Interrupted by user.")
