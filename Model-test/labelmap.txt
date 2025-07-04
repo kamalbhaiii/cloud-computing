@@ -1,3 +1,4 @@
-0 fish
-1 cat
-2 dog
+0 Cat
+1 Dog
+2 Bird
+3 Person

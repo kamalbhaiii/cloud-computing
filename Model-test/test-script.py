@@ -65,7 +65,7 @@ try:
         print("Raw output shape:", output_data.shape)
 
         predictions = output_data.transpose()  # Shape becomes (8400, 7)
-        threshold = 0.3  # Confidence threshold
+        threshold = 0.7  
         detections = []
 
         for pred in predictions:
@@ -92,7 +92,7 @@ try:
 
         print(f"Inference time: {inference_time:.4f} seconds")
         print("-" * 50)
-        time.sleep(0.1)
+        time.sleep(2.0)
 
 except KeyboardInterrupt:
     print("Interrupted by user.")
