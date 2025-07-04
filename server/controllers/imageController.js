@@ -25,8 +25,8 @@ async function uploadImage(req, res) {
         const timestamp = dayjs().toISOString();
 
         const record = await imageModel.createImageRecord({
-            name: [uniqueName],
-            category: [category],
+            name: uniqueName,
+            category: category,
             url,
             timestamp
         });
@@ -76,11 +76,11 @@ async function deleteImage(req, res) {
     const { name } = req.params;
 
     try {
-        const existing = await imageModel.getImageByName([name]);
+        const existing = await imageModel.getImageByName(name);
         if (!existing) return res.status(404).json(error('Image not found', 404));
 
         await minioService.deleteImage(name);
-        await imageModel.deleteImageByName([name]);
+        await imageModel.deleteImageByName(name);
 
         res.status(200).json(success(null, 'Image deleted successfully'));
     } catch (err) {
