@@ -1,10 +1,10 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: allow-dns
+  name: allow-dns-and-internal
   namespace: default
 spec:
-  podSelector: {}
+  podSelector: {}  # Applies to all pods in the 'default' namespace
   policyTypes:
     - Egress
   egress:
@@ -17,3 +17,8 @@ spec:
           port: 53
         - protocol: TCP
           port: 53
+
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: default
