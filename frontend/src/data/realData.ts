@@ -12,7 +12,7 @@ export async function fetchBackendImages(): Promise<ImageItem[]> {
             throw new Error("Invalid response format");
         }
 
-        const images: ImageItem[] = result.data.map((item:any, index:any) => {
+        const images: ImageItem[] = result.data.map((item:any) => {
             const timestamp = new Date(item.timestamp);
             const date = timestamp.toLocaleDateString("en-GB");
             const time = timestamp.toLocaleTimeString("en-GB", { hour12: false });
