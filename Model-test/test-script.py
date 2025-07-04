@@ -65,7 +65,7 @@ try:
         print("Raw output shape:", output_data.shape)
 
         predictions = output_data.transpose()  # Shape becomes (8400, 7)
-        threshold = 0.7  
+        threshold = 0.4  
         detections = []
 
         for pred in predictions:
