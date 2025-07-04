@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: allow-dns-and-internal
+  name: allow-dns
   namespace: default
 spec:
   podSelector: {}  # Applies to all pods in the 'default' namespace
