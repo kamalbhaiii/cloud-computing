@@ -19,9 +19,9 @@ export async function fetchBackendImages(): Promise<ImageItem[]> {
 
             return {
                 id: item.id,
-                name: item.name[0] || `image_${index + 1}`,
+                name: item.name,
                 image: item.url,
-                metadata: `${item.category?.[0] ?? "unknown"}`,
+                metadata: item.category,
                 date,
                 time,
                 link: item.url,

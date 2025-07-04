@@ -3,10 +3,8 @@ import Dashboard from "./pages/dashboard/index";
 import NotFound from "./pages/notfound/index";
 import Navbar from "./components/navbar/index";
 import Database from "./pages/database";
-import Camera from "./pages/camera"
 
 export default function App() {
-  const protocol = window.location.protocol;
   return (
     <Router>
       <div className="min-h-screen bg-gray-100 dark:bg-gray-950 transition-colors">
@@ -14,9 +12,6 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/database" element={<Database />} />
-          {
-            protocol == 'https://' ? <Route path="/camera" element={<Camera />} /> : <></>
-          }
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
