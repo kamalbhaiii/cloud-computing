@@ -1,14 +1,19 @@
-
 import numpy as np
 import time
-import csv
 from datetime import datetime
-from picamera2 import Picamera2
-from pycoral.utils.edgetpu import make_interpreter
-from pycoral.adapters.common import input_size, set_input
-from pycoral.adapters.detect import get_objects
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
+from threading import Thread
 import os
+import tflite_runtime.interpreter as tflite
+from background_uploader import upload_image_to_db
+from picamera2 import Picamera2
+
+def background_upload(image_path, category):
+    upload_image_to_db(image_path, category)
+
+# Directories
+TEMP_DIR = "temp"
+os.makedirs(TEMP_DIR, exist_ok=True)
 
 # Load the label map
 label_map = {}
@@ -17,83 +22,113 @@ with open('labelmap.txt', 'r') as f:
         idx, label = line.strip().split()
         label_map[int(idx)] = label
 
-# Load the Edge TPU model using pycoral
-model_path = 'best_float32_edgetpu.tflite'
-interpreter = make_interpreter(model_path)
+# Load the TFLite model
+model_path = 'best_full_integer_quant.tflite'
+interpreter = tflite.Interpreter(model_path=model_path)
 interpreter.allocate_tensors()
-print("Model loaded and allocated using pycoral.")
+print("Model loaded using tflite-runtime.")
 
-# Get input details
-input_w, input_h = input_size(interpreter)
+# Get input/output details
+input_details = interpreter.get_input_details()
+output_details = interpreter.get_output_details()
+input_shape = input_details[0]['shape']
+input_dtype = input_details[0]['dtype']
+input_quant = input_details[0]['quantization']
+output_quant = output_details[0]['quantization']
+output_dtype = output_details[0]['dtype']
+input_h, input_w = input_shape[1], input_shape[2]
+
+print(f"Input dtype: {input_dtype}, quant: {input_quant}")
+print(f"Output dtype: {output_dtype}, quant: {output_quant}")
 
 # Initialize PiCamera2
 picam2 = Picamera2()
-config = picam2.create_video_configuration(main={"size": (input_w, input_h)})
-picam2.configure(config)
+picam2.preview_configuration.main.size = (640, 480)
+picam2.preview_configuration.main.format = "RGB888"
+picam2.configure("preview")
 picam2.start()
-print("Pi Camera initialized.")
+time.sleep(2)  # allow camera to warm up
 
-# CSV file for automatic saving
-csv_filename = "detections.csv"
+print("Camera initialized. Starting capture...")
 
-# Write CSV header if file does not exist
-write_header = not os.path.isfile(csv_filename)
-with open(csv_filename, mode='a', newline='') as csvfile:
-    writer = csv.writer(csvfile)
-    if write_header:
-        writer.writerow(["timestamp", "label", "score", "inference_time"])
-
+# Process frames from PiCamera2
 try:
     while True:
-        # Capture frame as numpy array
         frame = picam2.capture_array()
-        # Convert BGR to RGB using NumPy
-        rgb = frame[..., [2, 1, 0]]  # Swap BGR to RGB by reordering channels
-
-        # Resize using PIL
-        pil_image = Image.fromarray(rgb)
+        pil_image = Image.fromarray(frame).convert("RGB")
+        draw_image = pil_image.copy()
+        original_w, original_h = pil_image.size
         resized = pil_image.resize((input_w, input_h), Image.Resampling.LANCZOS)
-        resized_array = np.array(resized)
+        image_np = np.array(resized)
 
-        # Prepare input for the model
-        set_input(interpreter, resized_array)
+        # Preprocess input
+        if input_dtype == np.float32:
+            input_tensor = np.expand_dims(image_np.astype(np.float32) / 255.0, axis=0)
+        elif input_dtype in [np.uint8, np.int8]:
+            scale, zero_point = input_quant
+            input_tensor = ((image_np.astype(np.float32) / 255.0) / scale + zero_point).astype(input_dtype)
+            input_tensor = np.expand_dims(input_tensor, axis=0)
+        else:
+            raise ValueError(f"Unsupported input dtype: {input_dtype}")
 
         # Run inference
+        interpreter.set_tensor(input_details[0]['index'], input_tensor)
         start_time = time.time()
         interpreter.invoke()
         inference_time = time.time() - start_time
 
-        # Get detected objects
-        objs = get_objects(interpreter, score_threshold=0.1)
+        # Postprocess
+        output_data = interpreter.get_tensor(output_details[0]['index'])[0]
+        if output_dtype in [np.uint8, np.int8]:
+            scale, zero_point = output_quant
+            output_data = (output_data.astype(np.float32) - zero_point) * scale
 
-        # Automatic push: append detections to CSV
-        with open(csv_filename, mode='a', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            timestamp = datetime.now().isoformat()
-            if objs:
-                for obj in objs:
-                    label = label_map.get(obj.id, obj.id)
-                    score = obj.score
-                    # Write detection to CSV
-                    writer.writerow([timestamp, label, f"{score:.2f}", f"{inference_time:.4f}"])
-            else:
-                writer.writerow([timestamp, "None", "0.00", f"{inference_time:.4f}"])
+        print("Raw output shape:", output_data.shape)
+        predictions = output_data.transpose()
+        threshold = 0.3
+        best_detection = None
+        max_confidence = 0.0
+        best_box = None
 
-        # (Optional) Still print for debug
-        if objs:
-            for obj in objs:
-                label = label_map.get(obj.id, obj.id)
-                score = obj.score
-                print(f"Predicted: {label.capitalize()} with Confidence: {score:.2f}")
+        for pred in predictions:
+            x, y, w, h = pred[:4]
+            objectness = pred[4]
+            class_id = int(pred[5])
+            confidence = pred[6]
+
+            if confidence > threshold and confidence > max_confidence:
+                max_confidence = confidence
+                best_detection = (class_id, confidence)
+                best_box = (x, y, w, h)
+
+        if best_detection and best_box:
+            x, y, w, h = best_box
+            x_min = int((x - w / 2) * original_w)
+            y_min = int((y - h / 2) * original_h)
+            x_max = int((x + w / 2) * original_w)
+            y_max = int((y + h / 2) * original_h)
+
+            draw = ImageDraw.Draw(draw_image)
+            label = label_map.get(best_detection[0], f"class_{best_detection[0]}")
+            confidence_text = f"{label} ({best_detection[1]*100:.1f}%)"
+            draw.rectangle([(x_min, y_min), (x_max, y_max)], outline="red", width=3)
+            draw.text((x_min, y_min - 10), confidence_text, fill="red")
+
+            # Save annotated image
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+            save_path = os.path.join(TEMP_DIR, f"{timestamp}.jpg")
+            draw_image.save(save_path)
+
+            print(f"Detected: {label.capitalize()} | Confidence: {best_detection[1]:.2f}")
+            Thread(target=background_upload, args=(save_path, label), daemon=True).start()
         else:
             print("No objects detected.")
 
         print(f"Inference time: {inference_time:.4f} seconds")
         print("-" * 50)
-        time.sleep(0.1)
+
+        time.sleep(5.0)  # Adjust capture rate if needed
 
 except KeyboardInterrupt:
-    print("Exiting gracefully.")
-finally:
+    print("Interrupted by user.")
     picam2.stop()
-    print("Camera closed.")
