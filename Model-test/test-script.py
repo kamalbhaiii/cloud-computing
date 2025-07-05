@@ -23,7 +23,7 @@ with open('labelmap.txt', 'r') as f:
         label_map[int(idx)] = label
 
 # Load the TFLite model
-model_path = 'best_float32.tflite'
+model_path = 'best_full_integer_quant.tflite'  # <-- Change to your model path
 interpreter = tflite.Interpreter(model_path=model_path)
 interpreter.allocate_tensors()
 print("Model loaded using tflite-runtime.")
@@ -32,7 +32,14 @@ print("Model loaded using tflite-runtime.")
 input_details = interpreter.get_input_details()
 output_details = interpreter.get_output_details()
 input_shape = input_details[0]['shape']
+input_dtype = input_details[0]['dtype']
+input_quant = input_details[0]['quantization']  # (scale, zero_point)
+output_quant = output_details[0]['quantization']
+output_dtype = output_details[0]['dtype']
 input_h, input_w = input_shape[1], input_shape[2]
+
+print(f"Input dtype: {input_dtype}, quant: {input_quant}")
+print(f"Output dtype: {output_dtype}, quant: {output_quant}")
 
 # Initialize PiCamera2
 picam2 = Picamera2()
@@ -45,12 +52,22 @@ try:
     while True:
         # Capture frame
         frame = picam2.capture_array()
-        rgb = frame[..., [2, 1, 0]]  # Convert BGR to RGB
+        rgb = frame[..., [2, 1, 0]]  # BGR to RGB
 
         # Resize and preprocess
         pil_image = Image.fromarray(rgb)
         resized = pil_image.resize((input_w, input_h), Image.Resampling.LANCZOS)
-        input_tensor = np.expand_dims(np.array(resized, dtype=np.float32) / 255.0, axis=0)  # Normalize
+        image_np = np.array(resized)
+
+        # Preprocess based on input type
+        if input_dtype == np.float32:
+            input_tensor = np.expand_dims(image_np.astype(np.float32) / 255.0, axis=0)
+        elif input_dtype in [np.uint8, np.int8]:
+            scale, zero_point = input_quant
+            input_tensor = ((image_np.astype(np.float32) / 255.0) / scale + zero_point).astype(input_dtype)
+            input_tensor = np.expand_dims(input_tensor, axis=0)
+        else:
+            raise ValueError(f"Unsupported input dtype: {input_dtype}")
 
         # Run inference
         interpreter.set_tensor(input_details[0]['index'], input_tensor)
@@ -58,11 +75,15 @@ try:
         interpreter.invoke()
         inference_time = time.time() - start_time
 
-        # Postprocessing for YOLOv8-style TFLite output
-        output_data = interpreter.get_tensor(output_details[0]['index'])[0]  # Shape: (7, 8400)
+        # Get and dequantize output if needed
+        output_data = interpreter.get_tensor(output_details[0]['index'])[0]
+        if output_dtype in [np.uint8, np.int8]:
+            scale, zero_point = output_quant
+            output_data = (output_data.astype(np.float32) - zero_point) * scale
+
         print("Raw output shape:", output_data.shape)
 
-        predictions = output_data.transpose()  # Shape becomes (8400, 7)
+        predictions = output_data.transpose()  # (8400, 7)
         threshold = 0.4
         best_detection = None
         max_confidence = 0.0
@@ -77,7 +98,7 @@ try:
                 max_confidence = confidence
                 best_detection = (class_id, confidence)
 
-        # Upload only if the best detection exists
+        # Save and upload if detection is valid
         if best_detection:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
             file_path = os.path.join(TEMP_DIR, f"{timestamp}.jpg")
