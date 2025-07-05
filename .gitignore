@@ -12,3 +12,5 @@ pred_*.*
 */node_modules
 */temp
 */.venv
+
+Model/input_images
