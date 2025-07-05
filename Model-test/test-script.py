@@ -23,7 +23,7 @@ with open('labelmap.txt', 'r') as f:
         label_map[int(idx)] = label
 
 # Load the TFLite model
-model_path = 'best_full_integer_quant.tflite'  # <-- Change to your model path
+model_path = 'best_full_integer_quant.tflite'
 interpreter = tflite.Interpreter(model_path=model_path)
 interpreter.allocate_tensors()
 print("Model loaded using tflite-runtime.")
