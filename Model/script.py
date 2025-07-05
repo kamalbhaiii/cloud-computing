@@ -56,9 +56,8 @@ print(f"Output dtype: {output_dtype}, quant: {output_quant}")
 
 # Initialize PiCamera2
 picam2 = Picamera2()
-picam2.preview_configuration.main.size = (640, 480)
-picam2.preview_configuration.main.format = "RGB888"
-picam2.configure("preview")
+config = picam2.create_preview_configuration(main={"size": (640, 480), "format": "RGB888"})
+picam2.configure(config)
 picam2.start()
 time.sleep(2)  # allow camera to warm up
 
@@ -142,7 +141,7 @@ try:
         print("Next inference will be done after 5 seconds")
         print("-" * 100)
 
-        time.sleep(5.0)  # Adjust capture rate if needed
+        time.sleep(5.0)
 
 except KeyboardInterrupt:
     print("Interrupted by user.")
