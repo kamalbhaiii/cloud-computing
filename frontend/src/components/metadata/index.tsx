@@ -1,5 +1,8 @@
+// src/components/MetadataModal.tsx
 import { useState } from "react";
 import { motion } from "framer-motion";
+import Dropdown from "../dropdown";
+import { metaOptions } from "./data/metaOptions";
 
 interface Props {
   currentMeta: string;
@@ -17,11 +20,11 @@ export default function MetadataModal({ currentMeta, onClose, onSave }: Props) {
       animate={{ opacity: 1 }}
     >
       <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-lg w-96">
-        <h2 className="text-xl mb-4 font-semibold">Edit Metadata</h2>
-        <input
-          value={meta}
-          onChange={(e) => setMeta(e.target.value)}
-          className="w-full p-2 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-800"
+        <h2 className="text-xl mb-4 font-semibold">Update Category</h2>
+        <Dropdown
+          options={metaOptions}
+          selected={meta}
+          onChange={setMeta}
         />
         <div className="mt-4 flex justify-end space-x-2">
           <button onClick={onClose} className="px-3 py-1 bg-gray-300 rounded">

@@ -46,3 +46,16 @@ export async function deleteBackendImage(name: string): Promise<void> {
     }
 }
   
+export async function updateBackendImage(name: string, category: string): Promise<void> {
+    const res = await fetch(`${config.BACKEND_END_POINT}:${config.BACKEND_PORT ? config.BACKEND_PORT : ''}/api/images/${name}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ category }),
+    });
+
+    if (!res.ok) {
+        throw new Error("Failed to update image in backend");
+    }
+}

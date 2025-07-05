@@ -4,7 +4,7 @@ import Pagination from "../../components/pagination";
 import MetadataModal from "../../components/metadata";
 import Alert from "../../components/alert";
 import { useImageStore } from "../../store/imageStore";
-import { fetchBackendImages, deleteBackendImage } from "../../data/realData";
+import { fetchBackendImages, deleteBackendImage, updateBackendImage } from "../../data/realData";
 
 export default function Dashboard() {
   const { images, setImages, deleteImage, updateImage } = useImageStore();
@@ -48,9 +48,18 @@ export default function Dashboard() {
     }
   };
 
-  const handleMetadataSave = (id: number, newMeta: string) => {
-    updateImage(id, { metadata: newMeta });
-    showAlert("Metadata updated", "success");
+  const handleMetadataSave = async (id: number, newMeta: string) => {
+    const image = images.find((img) => img.id === id);
+    if (!image) return;
+  
+    try {
+      await updateBackendImage(image.name, newMeta);
+      updateImage(id, { metadata: newMeta });
+      showAlert("Image category updated successfully", "success");
+    } catch (err) {
+      console.error(err);
+      showAlert("Failed to update image", "error");
+    }
   };
 
   // Pagination

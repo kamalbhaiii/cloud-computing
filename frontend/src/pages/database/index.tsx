@@ -1,27 +1,27 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useImageStore } from "../../store/imageStore";
-import { fetchBackendImages, deleteBackendImage } from "../../data/realData";
+import { fetchBackendImages, deleteBackendImage, updateBackendImage } from "../../data/realData";
 import SearchBar from "../../components/searchBar/index";
 import TableRow from "../../components/tableRow/index";
-import TableSkeleton from "../../components/tableSkeleton/index";
-import MetadataModal from "../../components/metadata"; // <-- Modal for editing metadata
+import MetadataModal from "../../components/metadata";
+import Pagination from "../../components/pagination";
+import Alert from "../../components/alert";
 
 export default function Database() {
   const { images, setImages, deleteImage, updateImage } = useImageStore();
 
-  const [filtered, setFiltered] = useState(images.slice(0, 20));
   const [searchTerm, setSearchTerm] = useState("");
   const [sortField, setSortField] = useState<keyof typeof images[0]>("id");
   const [sortAsc, setSortAsc] = useState(true);
-  const [hasMore, setHasMore] = useState(true);
-  const observer = useRef<IntersectionObserver | null>(null);
-
-  const [editingImageId, setEditingImageId] = useState<null | number>(null); // <-- Modal state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [editingImageId, setEditingImageId] = useState<null | number>(null);
   const [alert, setAlert] = useState({
     show: false,
     message: "",
     type: "success" as "success" | "error",
   });
+
+  const itemsPerPage = 12;
 
   const showAlert = (message: string, type: "success" | "error") => {
     setAlert({ show: true, message, type });
@@ -31,83 +31,30 @@ export default function Database() {
   useEffect(() => {
     if (images.length === 0) {
       fetchBackendImages()
-        .then((data) => {
-          setImages(data);
-        })
-        .catch(() => {
-          showAlert("Failed to fetch images from backend", "error");
-        });
+        .then((data) => setImages(data))
+        .catch(() => showAlert("Failed to fetch images from backend", "error"));
     }
   }, [images.length, setImages]);
 
-  useEffect(() => {
-    let result = [...images];
-
-    // Search
-    if (searchTerm) {
-      result = result.filter((img) =>
-        Object.values(img).some((val) =>
-          val.toString().toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      );
-    }
-
-    // Sort
-    result.sort((a, b) => {
+  const filteredImages = images
+    .filter((img) =>
+      Object.values(img).some((val) =>
+        val.toString().toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    )
+    .sort((a, b) => {
       const aVal = a[sortField];
       const bVal = b[sortField];
       if (typeof aVal === "number" && typeof bVal === "number") {
         return sortAsc ? aVal - bVal : bVal - aVal;
-      } else {
-        return sortAsc
-          ? String(aVal).localeCompare(String(bVal))
-          : String(bVal).localeCompare(String(aVal));
       }
+      return sortAsc
+        ? String(aVal).localeCompare(String(bVal))
+        : String(bVal).localeCompare(String(aVal));
     });
 
-    setFiltered(result.slice(0, 20));
-    setHasMore(result.length > 20);
-  }, [images, searchTerm, sortField, sortAsc]);
-
-  const loadMore = useCallback(() => {
-    const nextChunk = 20;
-    const newLen = filtered.length + nextChunk;
-
-    const filteredFull = [...images]
-      .filter((img) =>
-        Object.values(img).some((val) =>
-          val.toString().toLowerCase().includes(searchTerm.toLowerCase())
-        )
-      )
-      .sort((a, b) => {
-        const aVal = a[sortField];
-        const bVal = b[sortField];
-        if (typeof aVal === "number" && typeof bVal === "number") {
-          return sortAsc ? aVal - bVal : bVal - aVal;
-        } else {
-          return sortAsc
-            ? String(aVal).localeCompare(String(bVal))
-            : String(bVal).localeCompare(String(aVal));
-        }
-      });
-
-    const more = filteredFull.slice(0, newLen);
-    setFiltered(more);
-    setHasMore(more.length < filteredFull.length);
-  }, [filtered.length, images, searchTerm, sortField, sortAsc]);
-
-  const lastRowRef = useCallback(
-    (node: HTMLTableRowElement | null) => {
-      if (observer.current) observer.current.disconnect();
-      observer.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && hasMore) {
-          loadMore();
-        }
-      });
-      if (node) observer.current.observe(node);
-    },
-    [hasMore, loadMore]
-  );
+  const pageStart = (currentPage - 1) * itemsPerPage;
+  const paginated = filteredImages.slice(pageStart, pageStart + itemsPerPage);
 
   const handleDelete = async (id: number) => {
     const image = images.find((img) => img.id === id);
@@ -123,30 +70,43 @@ export default function Database() {
     }
   };
 
-  const handleEdit = (id: number, newMeta: string) => {
-    updateImage(id, { metadata: newMeta });
-    showAlert("Metadata updated", "success");
+  const handleEdit = async (id: number, newMeta: string) => {
+    const image = images.find((img) => img.id === id);
+    if (!image) return;
+
+    try {
+      await updateBackendImage(image.name, newMeta);
+      updateImage(id, { metadata: newMeta });
+      showAlert("Image category updated successfully", "success");
+    } catch (err) {
+      console.error(err);
+      showAlert("Failed to update image", "error");
+    }
   };
 
   return (
     <div className="p-4 max-w-7xl mx-auto">
       <h2 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-white">
-        Image Metadata Table
+        Database
       </h2>
-      <SearchBar onSearch={(term) => setSearchTerm(term)} />
+
+      <SearchBar
+        onSearch={(term) => {
+          setSearchTerm(term);
+          setCurrentPage(1); // reset to page 1 on search
+        }}
+      />
 
       <div className="overflow-x-auto mt-4 rounded shadow border dark:border-gray-700">
         <table className="min-w-full text-sm text-left dark:text-white">
           <thead className="bg-gray-100 dark:bg-gray-800">
             <tr>
-              {["id", "date", "time", "name", "link"].map((field) => (
+              {["id", "name", "category", "timestamp", "url"].map((field) => (
                 <th
                   key={field}
                   onClick={() => {
                     setSortField(field as keyof typeof images[0]);
-                    setSortAsc((prev) =>
-                      sortField === field ? !prev : true
-                    );
+                    setSortAsc((prev) => (sortField === field ? !prev : true));
                   }}
                   className="p-2 cursor-pointer select-none hover:bg-gray-200 dark:hover:bg-gray-700"
                 >
@@ -160,17 +120,8 @@ export default function Database() {
             </tr>
           </thead>
           <tbody>
-            {filtered.map((item, idx) =>
-              idx === filtered.length - 1 ? (
-                <tr ref={lastRowRef} key={item.id}>
-                  <TableRow
-                    item={item}
-                    metadata={item.metadata}
-                    onDelete={() => handleDelete(item.id)}
-                    onEdit={() => setEditingImageId(item.id)}
-                  />
-                </tr>
-              ) : (
+            {paginated.length > 0 ? (
+              paginated.map((item) => (
                 <TableRow
                   key={item.id}
                   item={item}
@@ -178,19 +129,28 @@ export default function Database() {
                   onDelete={() => handleDelete(item.id)}
                   onEdit={() => setEditingImageId(item.id)}
                 />
-              )
+              ))
+            ) : (
+              <tr>
+                <td colSpan={6} className="p-4 text-center text-gray-500">
+                  No records found.
+                </td>
+              </tr>
             )}
-            {hasMore && <TableSkeleton />}
           </tbody>
         </table>
       </div>
 
+      <Pagination
+        total={filteredImages.length}
+        currentPage={currentPage}
+        onPageChange={(page) => setCurrentPage(page)}
+      />
+
       {/* Metadata Modal */}
       {editingImageId !== null && (
         <MetadataModal
-          currentMeta={
-            images.find((i) => i.id === editingImageId)?.metadata || ""
-          }
+          currentMeta={images.find((i) => i.id === editingImageId)?.metadata || ""}
           onClose={() => setEditingImageId(null)}
           onSave={(newMeta) => {
             handleEdit(editingImageId, newMeta);
@@ -200,17 +160,7 @@ export default function Database() {
       )}
 
       {/* Alert */}
-      {alert.show && (
-        <div
-          className={`fixed bottom-4 right-4 px-4 py-2 rounded shadow ${
-            alert.type === "success"
-              ? "bg-green-500 text-white"
-              : "bg-red-500 text-white"
-          }`}
-        >
-          {alert.message}
-        </div>
-      )}
+      <Alert type={alert.type} message={alert.message} visible={alert.show} />
     </div>
   );
 }
