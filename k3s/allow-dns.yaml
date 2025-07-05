@@ -26,21 +26,3 @@ spec:
           port: 443
         - protocol: TCP
           port: 80
-
-    - from:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: default
-      ports:
-        - protocol: TCP
-          port: 9100    
-        - protocol: TCP
-          port: 3000    
-        - protocol: TCP
-          port: 5000   
-        - protocol: TCP
-          port: 5432  
-        - protocol: TCP
-          port: 9000   
-        - protocol: TCP
-          port: 9001
