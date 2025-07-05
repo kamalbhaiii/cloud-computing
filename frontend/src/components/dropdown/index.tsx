@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 interface DropdownProps {
   options: string[];
   selected: string;
