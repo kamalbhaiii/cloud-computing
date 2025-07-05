@@ -84,7 +84,7 @@ try:
         print("Raw output shape:", output_data.shape)
 
         predictions = output_data.transpose()  # (8400, 7)
-        threshold = 0.4
+        threshold = 0.3
         best_detection = None
         max_confidence = 0.0
 
