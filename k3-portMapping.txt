@@ -1,4 +1,14 @@
+Open-Access URL(s)
 http://192.168.137.178:8080 -> Jenkins
 http://frontend.local -> Frontend Dashboard
 http://server.local -> Server
 http://grafana.local -> Monitoring Dashboard
+
+Machine IP Addresses [Static]
+192.168.137.178 -> Master Node
+192.168.137.179 -> Worker-Node-1
+192.168.137.180 -> Worker-Node-2
+192.168.137.181 -> Worker-Node-3
+192.168.137.182 -> Worker-Node-4
+192.168.137.183 -> Worker-Node-5
+192.168.137.184 -> Sensor-Node
