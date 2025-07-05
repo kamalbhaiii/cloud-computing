@@ -6,6 +6,7 @@ from threading import Thread
 import os
 import tflite_runtime.interpreter as tflite
 from background_uploader import upload_image_to_db
+from InquirerPy import inquirer
 from picamera2 import Picamera2
 
 def background_upload(image_path, category):
@@ -22,8 +23,20 @@ with open('labelmap.txt', 'r') as f:
         idx, label = line.strip().split()
         label_map[int(idx)] = label
 
-# Load the TFLite model
-model_path = 'best_full_integer_quant.tflite'
+# Automatically list all .tflite files in the current directory
+tflite_files = [f for f in os.listdir('.') if f.endswith('.tflite')]
+
+if not tflite_files:
+    raise FileNotFoundError("No .tflite model files found in the current directory.")
+
+# Prompt the user to select a model interactively
+selected_model = inquirer.select(
+    message="Select the TFLite model to use:",
+    choices=tflite_files,
+    default=tflite_files[0]
+).execute()
+
+model_path = selected_model
 interpreter = tflite.Interpreter(model_path=model_path)
 interpreter.allocate_tensors()
 print("Model loaded using tflite-runtime.")
@@ -125,7 +138,9 @@ try:
             print("No objects detected.")
 
         print(f"Inference time: {inference_time:.4f} seconds")
-        print("-" * 50)
+        print("-" * 100)
+        print("Next inference will be done after 5 seconds")
+        print("-" * 100)
 
         time.sleep(5.0)  # Adjust capture rate if needed
 
