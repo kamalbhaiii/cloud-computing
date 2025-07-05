@@ -8,7 +8,7 @@ export const routes = [
         name: "Database",
     },
     {
-        path: "http://grafana.local",
+        path: "http://grafana.local/d/nodes_list/cloud-computing",
         name: "Monitoring Dashboard",
     },
 ];

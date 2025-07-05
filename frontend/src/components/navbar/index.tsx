@@ -29,6 +29,7 @@ export default function Navbar() {
         <div className="hidden md:flex space-x-4">
           {routes.map((route) => (
             <Link
+              target={route.path.includes("grafana") ? "_blank" : ""}
               key={route.path}
               to={route.path}
               className={`px-3 py-2 rounded-md text-sm font-medium ${
