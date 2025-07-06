@@ -57,7 +57,7 @@ print(f"Output dtype: {output_dtype}, quant: {output_quant}")
 # Initialize PiCamera2
 picam2 = Picamera2()
 config = picam2.create_preview_configuration(main={"size": (640, 480), "format": "RGB888"})
-picam2.configure(config)
+picam2.configure("main")
 picam2.start()
 time.sleep(2)  # allow camera to warm up
 
