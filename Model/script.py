@@ -1,7 +1,7 @@
 import numpy as np
 import time
 from datetime import datetime
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 from threading import Thread
 import os
 import tflite_runtime.interpreter as tflite
@@ -54,23 +54,22 @@ input_h, input_w = input_shape[1], input_shape[2]
 print(f"Input dtype: {input_dtype}, quant: {input_quant}")
 print(f"Output dtype: {output_dtype}, quant: {output_quant}")
 
-# Initialize USB camera using OpenCV
-cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-time.sleep(2)  # allow camera to warm up
+print("Starting periodic detection. Press Ctrl+C to stop.")
 
-if not cap.isOpened():
-    raise RuntimeError("Failed to open the USB webcam.")
-
-print("USB Camera initialized. Starting capture...")
-
-# Process frames from camera
 try:
     while True:
+        # Open camera for single frame capture
+        cap = cv2.VideoCapture(0)
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+        time.sleep(1.5)  # Warm-up
+
         ret, frame = cap.read()
+        cap.release()
+
         if not ret:
-            print("Failed to capture frame")
+            print("Failed to capture frame.")
+            time.sleep(5)
             continue
 
         # Convert to RGB for PIL
@@ -103,7 +102,6 @@ try:
             scale, zero_point = output_quant
             output_data = (output_data.astype(np.float32) - zero_point) * scale
 
-        print("Raw output shape:", output_data.shape)
         predictions = output_data.transpose()
         threshold = 0.3
         best_detection = None
@@ -146,12 +144,9 @@ try:
 
         print(f"Inference time: {inference_time:.4f} seconds")
         print("-" * 100)
-        print("Next inference will be done after 5 seconds")
+        print("Waiting 5 seconds before next detection...")
         print("-" * 100)
-
-        time.sleep(5.0)
+        time.sleep(5)
 
 except KeyboardInterrupt:
-    print("Interrupted by user.")
-    cap.release()
-    cv2.destroyAllWindows()
+    print("Detection stopped by user.")
