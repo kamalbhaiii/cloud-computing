@@ -14,7 +14,7 @@ pipeline {
 
         stage('Deploy K3s Manifests') {
             steps {
-                sh 'sudo /usr/local/bin/kubectl apply -f k3s/'
+                sh '/usr/local/bin/kubectl apply -f k3s/'
             }
         }
     }
