@@ -98,31 +98,37 @@ try:
 
             predictions = output_data.transpose((1, 0))  # (8400, 8)
             threshold = 0.01
-            detections = []
             original_h, original_w = frame.shape[:2]
+            best_predictions = {}  # class_id -> (confidence, pred)
 
             for pred in predictions:
                 x, y, w, h = pred[:4]
                 objectness = pred[4]
                 class_probs = pred[5:]
-                class_id = np.argmax(class_probs)
+                class_id = int(np.argmax(class_probs))
                 class_score = class_probs[class_id]
                 confidence = objectness * class_score
 
                 if confidence > threshold:
-                    x_min = int((x - w / 2) * original_w)
-                    y_min = int((y - h / 2) * original_h)
-                    x_max = int((x + w / 2) * original_w)
-                    y_max = int((y + h / 2) * original_h)
+                    if class_id not in best_predictions or confidence > best_predictions[class_id][0]:
+                        best_predictions[class_id] = (confidence, pred)
 
-                    label = label_map.get(class_id, f"class_{class_id}")
-                    text = f"{label} ({confidence*100:.1f}%)"
+            detections = []
+            for class_id, (confidence, pred) in best_predictions.items():
+                x, y, w, h = pred[:4]
+                x_min = int((x - w / 2) * original_w)
+                y_min = int((y - h / 2) * original_h)
+                x_max = int((x + w / 2) * original_w)
+                y_max = int((y + h / 2) * original_h)
 
-                    cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), (0, 0, 255), 2)
-                    cv2.putText(frame, text, (x_min, max(0, y_min - 10)),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+                label = label_map.get(class_id, f"class_{class_id}")
+                text = f"{label} ({confidence*100:.1f}%)"
 
-                    detections.append(label)
+                cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), (0, 0, 255), 2)
+                cv2.putText(frame, text, (x_min, max(0, y_min - 10)),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+
+                detections.append(label)
 
             if detections:
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
