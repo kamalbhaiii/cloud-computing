@@ -48,23 +48,23 @@ input_h, input_w = input_shape[1], input_shape[2]
 def background_upload(image_path, category):
     upload_image_to_db(image_path, category)
 
-# === Start video capture ===
-cap = cv2.VideoCapture(0)
-if not cap.isOpened():
-    raise RuntimeError("Cannot access the USB camera.")
-
 print("🔁 Starting real-time detection every 5 seconds. Press 'q' to stop.")
 try:
     while True:
         # === Start video capture ===
         cap = cv2.VideoCapture(0)
+        time.sleep(0.5)  # Allow camera to initialize
+
         if not cap.isOpened():
             print("❌ Cannot access the USB camera.")
+            cap.release()
             time.sleep(5)
             continue
 
         ret, frame = cap.read()
-        cap.release()  # Immediately stop the camera after one frame
+        cap.release()
+        time.sleep(0.5)  # Allow camera to fully release
+
         if not ret:
             print("❌ Failed to capture frame.")
             time.sleep(5)
@@ -142,15 +142,16 @@ try:
         print(f"Inference time: {inference_time:.4f} seconds")
         print("-" * 60)
 
-        # === Show frame briefly ===
+        # === Show frame ===
         cv2.imshow("Live Detection", frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+
+        # Wait briefly to show frame (500ms) or break if 'q' is pressed
+        if cv2.waitKey(500) & 0xFF == ord('q'):
             print("🛑 Detection stopped by user.")
             break
 
-        # Close window and wait 5 seconds
-        cv2.destroyAllWindows()
-        time.sleep(5)
+        cv2.destroyAllWindows()  # Close the detection window
+        time.sleep(5)  # Wait before restarting the cycle
 
 except KeyboardInterrupt:
     print("🛑 Detection interrupted by user (Ctrl+C).")
