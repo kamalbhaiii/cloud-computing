@@ -16,7 +16,7 @@ spec:
       nodeName: worker-node-4
       containers:
       - name: frontend
-        image: kamalbhaiii/cloud-computing-frontend:20250705-41fdf59
+        image: kamalbhaiii/cloud-computing-frontend:20250706-a9fbeb2
         imagePullPolicy: Always
         ports:
         - containerPort: 80
