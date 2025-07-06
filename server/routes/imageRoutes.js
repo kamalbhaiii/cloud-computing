@@ -23,8 +23,8 @@ router.put(
 );
 
 router.delete(
-    '/:name',
-    param('name').notEmpty(),
+    '/',
+    body('names').isArray().notEmpty(),
     imageController.deleteImage
 );
 

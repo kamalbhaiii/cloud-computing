@@ -73,19 +73,36 @@ async function updateImage(req, res) {
 }
 
 async function deleteImage(req, res) {
-    const { name } = req.params;
+    const { names } = req.body;
 
-    try {
-        const existing = await imageModel.getImageByName(name);
-        if (!existing) return res.status(404).json(error('Image not found', 404));
-
-        await minioService.deleteImage(name);
-        await imageModel.deleteImageByName(name);
-
-        res.status(200).json(success(null, 'Image deleted successfully'));
-    } catch (err) {
-        res.status(500).json(error('Failed to delete image'));
+    if (!Array.isArray(names) || names.length === 0) {
+        return res.status(400).json(error('Image name(s) must be a non-empty array', 400));
     }
+
+    const results = {
+        deleted: [],
+        notFound: [],
+        failed: [],
+    };
+
+    for (const name of names) {
+        try {
+            const existing = await imageModel.getImageByName(name);
+            if (!existing) {
+                results.notFound.push(name);
+                continue;
+            }
+
+            await minioService.deleteImage(name);
+            await imageModel.deleteImageByName(name);
+            results.deleted.push(name);
+        } catch (err) {
+            results.failed.push({ name, error: err.message || 'Unknown error' });
+        }
+    }
+
+    const status = results.failed.length > 0 ? 207 : 200;
+    return res.status(status).json(success(results, 'Image deletion processed'));
 }
 
 module.exports = {
