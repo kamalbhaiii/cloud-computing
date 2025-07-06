@@ -20,9 +20,9 @@ async function uploadImage(req, res) {
     }
 
     try {
-        const uniqueName = `${uuidv4()}_${file.originalname}`;
-        const url = await minioService.uploadImage(file.buffer, uniqueName, file.mimetype);
         const timestamp = dayjs().toISOString();
+        const uniqueName = `${category}_${timestamp}}`;
+        const url = await minioService.uploadImage(file.buffer, uniqueName, file.mimetype);
 
         const record = await imageModel.createImageRecord({
             name: uniqueName,
@@ -63,11 +63,17 @@ async function updateImage(req, res) {
 
     try {
         const existing = await imageModel.getImageByName(name);
-        if (!existing) return res.status(404).json(error('Image not found', 404));
+        if (!existing) {
+            return res.status(404).json(error('Image not found', 404));
+        }
 
         const updated = await imageModel.updateImageByName(name, { category });
+        const imageBuffer = await minioService.getImageBuffer(name); // You need to implement this
+        sendImageNotificationToTelegram(imageBuffer, `Updated category: ${category}`);
+
         res.status(200).json(success(updated, 'Image metadata updated'));
     } catch (err) {
+        console.error(err);
         res.status(500).json(error('Failed to update image metadata'));
     }
 }
