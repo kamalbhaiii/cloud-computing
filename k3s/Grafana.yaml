@@ -42,7 +42,7 @@ spec:
       labels:
         app: grafana
     spec:
-      nodeName: worker-node-1
+      nodeName: master-node
       securityContext:
         fsGroup: 472
       containers:
