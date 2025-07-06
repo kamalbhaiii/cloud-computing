@@ -7,7 +7,7 @@ import os
 import tflite_runtime.interpreter as tflite
 from background_uploader import upload_image_to_db
 from InquirerPy import inquirer
-from picamera2 import Picamera2
+import cv2
 
 def background_upload(image_path, category):
     upload_image_to_db(image_path, category)
@@ -54,20 +54,28 @@ input_h, input_w = input_shape[1], input_shape[2]
 print(f"Input dtype: {input_dtype}, quant: {input_quant}")
 print(f"Output dtype: {output_dtype}, quant: {output_quant}")
 
-# Initialize PiCamera2
-picam2 = Picamera2()
-config = picam2.create_preview_configuration(main={"size": (640, 480), "format": "RGB888"})
-picam2.configure("main")
-picam2.start()
+# Initialize USB camera using OpenCV
+cap = cv2.VideoCapture(0)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 time.sleep(2)  # allow camera to warm up
 
-print("Camera initialized. Starting capture...")
+if not cap.isOpened():
+    raise RuntimeError("Failed to open the USB webcam.")
 
-# Process frames from PiCamera2
+print("USB Camera initialized. Starting capture...")
+
+# Process frames from camera
 try:
     while True:
-        frame = picam2.capture_array()
-        pil_image = Image.fromarray(frame).convert("RGB")
+        ret, frame = cap.read()
+        if not ret:
+            print("Failed to capture frame")
+            continue
+
+        # Convert to RGB for PIL
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        pil_image = Image.fromarray(frame_rgb).convert("RGB")
         draw_image = pil_image.copy()
         original_w, original_h = pil_image.size
         resized = pil_image.resize((input_w, input_h), Image.Resampling.LANCZOS)
@@ -145,4 +153,5 @@ try:
 
 except KeyboardInterrupt:
     print("Interrupted by user.")
-    picam2.stop()
+    cap.release()
+    cv2.destroyAllWindows()
