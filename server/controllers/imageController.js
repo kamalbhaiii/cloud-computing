@@ -21,7 +21,7 @@ async function uploadImage(req, res) {
 
     try {
         const timestamp = dayjs().toISOString();
-        const uniqueName = `${category}_${timestamp}}`;
+        const uniqueName = `${category}_${timestamp}`;
         const url = await minioService.uploadImage(file.buffer, uniqueName, file.mimetype);
 
         const record = await imageModel.createImageRecord({
@@ -68,7 +68,7 @@ async function updateImage(req, res) {
         }
 
         const updated = await imageModel.updateImageByName(name, { category });
-        const imageBuffer = await minioService.getImageBuffer(name); // You need to implement this
+        const imageBuffer = await minioService.getImageBuffer(name);
         sendImageNotificationToTelegram(imageBuffer, `Updated category: ${category}`);
 
         res.status(200).json(success(updated, 'Image metadata updated'));
