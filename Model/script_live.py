@@ -50,6 +50,8 @@ def background_upload(image_path, category):
 
 # === Open video stream ===
 cap = cv2.VideoCapture(0)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 if not cap.isOpened():
     raise RuntimeError("Cannot access the USB camera.")
 
