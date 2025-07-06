@@ -33,6 +33,19 @@ async function deleteImage(name) {
     await minioClient.removeObject(env.MINIO_BUCKET, name);
 }
 
+async function getImageBuffer(imageName) {
+    return new Promise((resolve, reject) => {
+        const chunks = [];
+        minioClient.getObject(env.MINIO_BUCKET, imageName, (err, dataStream) => {
+            if (err) return reject(err);
+
+            dataStream.on('data', chunk => chunks.push(chunk));
+            dataStream.on('end', () => resolve(Buffer.concat(chunks)));
+            dataStream.on('error', reject);
+        });
+    });
+}
+
 async function checkConnection() {
     try {
         const buckets = await minioClient.listBuckets();
@@ -45,5 +58,6 @@ async function checkConnection() {
 module.exports = {
     uploadImage,
     deleteImage,
-    checkConnection
+    checkConnection,
+    getImageBuffer
 };
