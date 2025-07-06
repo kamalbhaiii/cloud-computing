@@ -92,7 +92,7 @@ try:
             output_data = (output_data.astype(np.float32) - zero_point) * scale
 
         predictions = output_data.transpose((1, 0))  # (8400, 8)
-        threshold = 0.3
+        threshold = 0.05
         draw = ImageDraw.Draw(draw_image)
         detections = []
 
