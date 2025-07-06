@@ -56,8 +56,15 @@ if not cap.isOpened():
 print("🔁 Starting real-time detection every 5 seconds. Press 'q' to stop.")
 try:
     while True:
-        # Read and store a frame
+        # === Start video capture ===
+        cap = cv2.VideoCapture(0)
+        if not cap.isOpened():
+            print("❌ Cannot access the USB camera.")
+            time.sleep(5)
+            continue
+
         ret, frame = cap.read()
+        cap.release()  # Immediately stop the camera after one frame
         if not ret:
             print("❌ Failed to capture frame.")
             time.sleep(5)
@@ -92,7 +99,7 @@ try:
             output_data = (output_data.astype(np.float32) - zero_point) * scale
 
         predictions = output_data.transpose((1, 0))  # (8400, 8)
-        threshold = 0.05
+        threshold = 0.01
         detections = []
 
         original_h, original_w = frame.shape[:2]
@@ -116,11 +123,11 @@ try:
 
                 # Draw on OpenCV frame
                 cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), (0, 0, 255), 2)
-                cv2.putText(frame, text, (x_min, max(0, y_min - 10)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+                cv2.putText(frame, text, (x_min, max(0, y_min - 10)),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
                 detections.append(label)
 
-        # === Save and upload if detections exist ===
         if detections:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
             save_path = os.path.join(TEMP_DIR, f"{timestamp}.jpg")
@@ -135,17 +142,18 @@ try:
         print(f"Inference time: {inference_time:.4f} seconds")
         print("-" * 60)
 
-        # === Show frame in a window ===
+        # === Show frame briefly ===
         cv2.imshow("Live Detection", frame)
-
-        # Wait for 5 seconds or until 'q' key is pressed
-        if cv2.waitKey(5000) & 0xFF == ord('q'):
+        if cv2.waitKey(1) & 0xFF == ord('q'):
             print("🛑 Detection stopped by user.")
             break
+
+        # Close window and wait 5 seconds
+        cv2.destroyAllWindows()
+        time.sleep(5)
 
 except KeyboardInterrupt:
     print("🛑 Detection interrupted by user (Ctrl+C).")
 
 finally:
-    cap.release()
     cv2.destroyAllWindows()
