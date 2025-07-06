@@ -12,7 +12,7 @@ export default function Database() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [sortField, setSortField] = useState<keyof typeof images[0]>("id");
-  const [sortAsc, setSortAsc] = useState(true);
+  const [sortAsc, setSortAsc] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [editingImageId, setEditingImageId] = useState<null | number>(null);
   const [alert, setAlert] = useState({

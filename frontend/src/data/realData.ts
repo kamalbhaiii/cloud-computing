@@ -4,7 +4,6 @@ import config from '../config/envConfig'
 export async function fetchBackendImages(): Promise<ImageItem[]> {
     try {
         const protocol = window.location.protocol;
-        console.log(protocol)
         const response = await fetch(`${protocol == 'https:' ? config.SECURE_BACKEND_END_POINT : config.BACKEND_END_POINT}:${config.BACKEND_PORT}/api/images`);
         const result = await response.json();
 
@@ -37,8 +36,26 @@ export async function fetchBackendImages(): Promise<ImageItem[]> {
 
 
 export async function deleteBackendImage(name: string): Promise<void> {
-    const res = await fetch(`${config.BACKEND_END_POINT}:${config.BACKEND_PORT ? config.BACKEND_PORT : ''}/api/images/${name}`, {
+    const res = await fetch(`${config.BACKEND_END_POINT}:${config.BACKEND_PORT ? config.BACKEND_PORT : ''}/api/images`, {
         method: "DELETE",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ names: [name] }),
+    });
+
+    if (!res.ok) {
+        throw new Error("Failed to delete image from backend");
+    }
+}
+
+export async function deleteBackendMultipleImage(names: string[]): Promise<void> {
+    const res = await fetch(`${config.BACKEND_END_POINT}:${config.BACKEND_PORT ? config.BACKEND_PORT : ''}/api/images`, {
+        method: "DELETE",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ names }),
     });
 
     if (!res.ok) {
