@@ -1,35 +1,33 @@
 import os
+import cv2
 import time
+import numpy as np
+from PIL import Image
 from datetime import datetime
 from threading import Thread
-import numpy as np
-import cv2
-from PIL import Image
 from InquirerPy import inquirer
+import tflite_runtime.interpreter as tflite
+from pycoral.utils.edgetpu import make_interpreter
 from background_uploader import upload_image_to_db
-
-from pycoral.utils.dataset import read_label_file
-from pycoral.adapters import detect
-from pycoral.utils.edgetpu import make_interpreter, list_edge_tpus
-from pycoral.adapters.common import input_size
-from pycoral.adapters import common
 
 # === Directories ===
 TEMP_DIR = "temp"
 os.makedirs(TEMP_DIR, exist_ok=True)
 
-print(list_edge_tpus())
-
 # === Load label map ===
-label_map = read_label_file("labelmap.txt")  # Format: index label
+label_map = {}
+with open("labelmap.txt", "r") as f:
+    for line in f:
+        idx, label = line.strip().split()
+        label_map[int(idx)] = label
 
-# === Select EdgeTPU model ===
+# === Select model ===
 tflite_files = [f for f in os.listdir('.') if f.endswith('edgetpu.tflite')]
 if not tflite_files:
     raise FileNotFoundError("No .tflite models found.")
 
 selected_model = inquirer.select(
-    message="Select the EdgeTPU-compiled TFLite model to use:",
+    message="Select the TFLite model to use:",
     choices=tflite_files,
     default=tflite_files[0]
 ).execute()
@@ -38,92 +36,120 @@ print(f"Selected model: {selected_model}")
 interpreter = make_interpreter(selected_model)
 interpreter.allocate_tensors()
 
-input_w, input_h = input_size(interpreter)
+input_details = interpreter.get_input_details()
+output_details = interpreter.get_output_details()
+input_shape = input_details[0]['shape']
+input_dtype = input_details[0]['dtype']
+input_quant = input_details[0]['quantization']
+output_dtype = output_details[0]['dtype']
+output_quant = output_details[0]['quantization']
+input_h, input_w = input_shape[1], input_shape[2]
 
 # === Upload in background ===
 def background_upload(image_path, category):
     upload_image_to_db(image_path, category)
 
-# === Open video stream ===
-cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-if not cap.isOpened():
-    raise RuntimeError("Cannot access the USB camera.")
+# === Run live detection ===
+def run_live_camera():
+    cap = cv2.VideoCapture(0)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+    if not cap.isOpened():
+        raise RuntimeError("Cannot access the USB camera.")
 
-print("🔁 Camera running. Detecting every 5 seconds. Press 'q' to stop.")
-last_detection_time = time.time()
+    print("📷 Camera running. Detecting every 5 seconds. Press 'q' to quit.")
+    last_detection_time = time.time()
 
-try:
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            print("❌ Failed to capture frame.")
-            continue
+    try:
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                print("❌ Failed to capture frame.")
+                continue
 
-        current_time = time.time()
+            current_time = time.time()
+            cv2.imshow("Live Detection", frame)
 
-        # Show live video feed
-        cv2.imshow("Live Detection", frame)
+            if current_time - last_detection_time >= 5:
+                last_detection_time = current_time
+                original_h, original_w = frame.shape[:2]
+                rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                pil_image = Image.fromarray(rgb).resize((input_w, input_h), Image.Resampling.LANCZOS)
+                image_np = np.array(pil_image)
 
-        if current_time - last_detection_time >= 5:
-            last_detection_time = current_time
+                if input_dtype == np.float32:
+                    input_tensor = np.expand_dims(image_np.astype(np.float32) / 255.0, axis=0)
+                elif input_dtype in [np.uint8, np.int8]:
+                    scale, zero_point = input_quant
+                    input_tensor = ((image_np / 255.0) / scale + zero_point).astype(input_dtype)
+                    input_tensor = np.expand_dims(input_tensor, axis=0)
+                else:
+                    raise ValueError(f"Unsupported input dtype: {input_dtype}")
 
-            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            pil_image = Image.fromarray(rgb_frame).resize((input_w, input_h), Image.Resampling.LANCZOS)
+                interpreter.set_tensor(input_details[0]['index'], input_tensor)
+                start = time.time()
+                interpreter.invoke()
+                inference_time = time.time() - start
 
-            common.set_input(interpreter, pil_image)
+                output_data = interpreter.get_tensor(output_details[0]['index'])[0]
+                if output_dtype in [np.uint8, np.int8]:
+                    scale, zero_point = output_quant
+                    output_data = (output_data.astype(np.float32) - zero_point) * scale
 
-            start_time = time.time()
-            interpreter.invoke()
-            inference_time = time.time() - start_time
+                predictions = output_data.transpose((1, 0))  # shape: (8400, 8)
+                best_predictions = {}  # class_id -> (confidence, pred)
+                threshold = 0.01
 
-            objs = detect.get_objects(interpreter, score_threshold=0.01)
+                for pred in predictions:
+                    x, y, w, h = pred[:4]
+                    objectness = pred[4]
+                    class_probs = pred[5:]
+                    class_id = int(np.argmax(class_probs))
+                    class_score = class_probs[class_id]
+                    confidence = objectness * class_score
 
-            detections = []
-            for obj in objs:
-                bbox = obj.bbox
-                label = label_map.get(obj.id, f"class_{obj.id}")
-                confidence = obj.score
-                detections.append(label)
+                    if confidence > threshold:
+                        if class_id not in best_predictions or confidence > best_predictions[class_id][0]:
+                            best_predictions[class_id] = (confidence, pred)
 
-                x_min, y_min, x_max, y_max = bbox.left, bbox.top, bbox.right, bbox.bottom
+                detections = []
+                for class_id, (confidence, pred) in best_predictions.items():
+                    x, y, w, h = pred[:4]
+                    x_min = int((x - w / 2) * original_w)
+                    y_min = int((y - h / 2) * original_h)
+                    x_max = int((x + w / 2) * original_w)
+                    y_max = int((y + h / 2) * original_h)
 
-                scale_x = frame.shape[1] / input_w
-                scale_y = frame.shape[0] / input_h
+                    label = label_map.get(class_id, f"class_{class_id}")
+                    text = f"{label} ({confidence * 100:.1f}%)"
+                    cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
+                    cv2.putText(frame, text, (x_min, max(0, y_min - 10)),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                    detections.append(label)
 
-                x_min = int(x_min * scale_x)
-                y_min = int(y_min * scale_y)
-                x_max = int(x_max * scale_x)
-                y_max = int(y_max * scale_y)
+                if detections:
+                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+                    save_path = os.path.join(TEMP_DIR, f"{timestamp}.jpg")
+                    cv2.imwrite(save_path, frame)
+                    print(f"🟢 Detected: {detections}")
+                    for label in detections:
+                        Thread(target=background_upload, args=(save_path, label), daemon=True).start()
+                else:
+                    print("🔴 No objects detected.")
 
-                text = f"{label} ({confidence*100:.1f}%)"
-                cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), (0, 0, 255), 2)
-                cv2.putText(frame, text, (x_min, max(0, y_min - 10)),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+                print(f"Inference time: {inference_time:.4f} seconds")
+                print("-" * 60)
 
-            if detections:
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-                save_path = os.path.join(TEMP_DIR, f"{timestamp}.jpg")
-                cv2.imwrite(save_path, frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                print("🛑 Stopped by user.")
+                break
 
-                print(f"🟢 Detected: {detections}")
-                for label in detections:
-                    Thread(target=background_upload, args=(save_path, label), daemon=True).start()
-            else:
-                print("🔴 No objects detected.")
+    except KeyboardInterrupt:
+        print("🛑 Interrupted by user (Ctrl+C).")
 
-            print(f"Inference time: {inference_time:.4f} seconds")
-            print("-" * 60)
+    finally:
+        cap.release()
+        cv2.destroyAllWindows()
 
-        # Press 'q' to quit
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            print("🛑 Detection stopped by user.")
-            break
-
-except KeyboardInterrupt:
-    print("🛑 Detection interrupted by user (Ctrl+C).")
-
-finally:
-    cap.release()
-    cv2.destroyAllWindows()
+# === Run live camera detection ===
+run_live_camera()
