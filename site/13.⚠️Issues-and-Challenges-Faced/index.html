@@ -1,0 +1,716 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../12.%E2%9C%85Testing-and-Validation%E2%80%90-%28to-be-edited%29/">
+      
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.15">
+    
+    
+      
+        <title>Issues & Challenges Faced - Cloud Computing Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.342714a4.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Cloud Computing Documentation" class="md-header__button md-logo" aria-label="Cloud Computing Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Cloud Computing Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Issues & Challenges Faced
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Cloud Computing Documentation" class="md-nav__button md-logo" aria-label="Cloud Computing Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Cloud Computing Documentation
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01.%F0%9F%93%98Project-Overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Project Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02.%F0%9F%91%A5Team-Members/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Team Members
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03.%F0%9F%94%8CHardware-Architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Hardware & Architecture
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04.%F0%9F%92%BBSoftware-Stack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Software Stack
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05.%F0%9F%A7%A9System-Design-%26-Architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    System Design & Architecture
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06.%F0%9F%93%B7Sensor-Node-Setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Sensor Node
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07.%F0%9F%A7%A0Object-Detection-%26-Model-Training/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Object Detection & Model
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../08.%F0%9F%9B%A0%EF%B8%8FBackend-Development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Backend
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09.%F0%9F%8C%90Frontend-Development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Frontend
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10.%E2%98%B8%EF%B8%8FKubernetes-Cluster-Deployment-%28k3s%29/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    K3s Deployment
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../11.%F0%9F%93%ACNotifications-System-%28Telegram-Bot%29/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Notification System
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../12.%E2%9C%85Testing-and-Validation%E2%80%90-%28to-be-edited%29/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Testing & Validation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Issues & Challenges Faced
+    
+  </span>
+  
+
+      </a>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+  <h1>Issues & Challenges Faced</h1>
+
+<p><strong>1. Hardware Issues:</strong>
+* Overheating
+* Power supply limits</p>
+<ul>
+<li><strong>Secure Backend with TLS</strong></li>
+</ul>
+<p>Step-1: Create TLS Certificate (Master-node)</p>
+<p><code>openssl req -x509 -nodes -days 365 -newkey rsa:2048  -keyout tls.key -out tls.crt -subj "/CN=frontend.local/O=local"</code></p>
+<p>Step-2: Create TLS Secret:</p>
+<p><code>kubectl create secret tls &lt;tls-name&gt;-tls --key tls.key --cert tls.crt -n default</code></p>
+<p>Step-3: Make Ingress.yaml file(s)</p>
+<p>Step4: In development PC's add into hosts file ( )</p>
+<p>Step-5: Apply ingress yaml files.
+* Static IP Address of RPi Machines:</p>
+<p>To assign the static IP address to all the machines we need to edit netplan files. Here, we are using Ubuntu Server 22.04 LTS version on machines.</p>
+<p>Step-1: SSH into the machine.</p>
+<p>Step-2: Run <code>cd /etc/netplan</code></p>
+<p>Step-3: If already there is an existing file then remove it and add the file attached here or else just paste the file in netplan directory.</p>
+<p>Note: Indentations are very important and the format or extension of the file must be .yaml</p>
+<p><a href="https://github.com/user-attachments/files/20955760/01-StaticIP.txt">01-StaticIP.txt</a></p>
+<p><strong>Camera Issue:</strong>
+The Raspberry Pi Camera is not good for achieving the max performance of the model. Images are blurry and noisy sometimes.</p>
+<p>Solution: To implement a logic which uses the web-sockets to send the image from the frontend using device camera and do the inference on TPU based sensor-node.</p>
+<ul>
+<li>We need to assign RPi modules to use Cgroup Memory 1 instead of 2.</li>
+</ul>
+<p>Solution:</p>
+<p>Step-1: </p>
+<p>Run in the terminal: <code>sudo nano /boot/firware/cmdline.txt</code></p>
+<p>Step-2:</p>
+<p>Add in the end: <code>cgroup_enable=1 cgroup_memory=1</code></p>
+<p><strong>2. Software Issues:</strong>
+* OS crashes or instability
+* Camera module driver problems
+* Compatibility with YOLO
+* Issue in installing PYcoral(because of dependency of gdal)</p>
+<p><strong>3. ML Model Issues:</strong></p>
+<ul>
+<li>GPU-Related Error in YOLOv8:</li>
+</ul>
+<p>RuntimeError: CUDA out of memory</p>
+<p>This error occurred when the model tried to allocate more GPU memory than was available. It is commonly triggered by:</p>
+<p>•   Large batch sizes or input image dimensions,</p>
+<p>•   High model complexity,</p>
+<p>•   Insufficient GPU memory (e.g., &lt;8GB VRAM).</p>
+<p>•   RuntimeError: CUDA out of memory</p>
+<p>→ Model, batch size, or image size too large for available GPU memory.</p>
+<p>•   ZeroDivisionError: division by zero</p>
+<p>→ Usually due to empty validation set or no detections.</p>
+<p>•   FileNotFoundError</p>
+<p>→ Image or label paths missing or misconfigured in data.yaml.</p>
+<p>•   Unsupported Export Formats:</p>
+<p>Some target platforms did not support the exported model formats directly, leading to conversion failures or compatibility issues.</p>
+<p>•   Quantization Limitations:</p>
+<p>Converting the model to lower-precision formats (e.g., for TensorRT or Edge TPU) introduced quantization challenges, which affected model accuracy or caused export failures.</p>
+<p>•   Hardware Compatibility Issues:
+Inference on certain edge devices failed due to precision mismatches (e.g., float32 vs. int8), requiring additional post-processing or model optimization steps.</p>
+<p>•   Incompatible Output Tensor Format for Coral Edge TPU
+                 During deployment of the YOLOv8 model to the Coral Edge TPU, a compatibility issue was encountered. The exported    TensorFlow Lite (TFLite) model produced a single raw output tensor, which does not meet the Coral TPU’s requirement for object detection. Specifically, the Coral Edge TPU expects models to output four distinct tensors:</p>
+<p>•   boxes – bounding box coordinates</p>
+<p>•   classes – detected class indices</p>
+<p>•   scores – confidence scores</p>
+<p>•   num_detections – total number of valid detections</p>
+<p>Proposed Solutions:</p>
+<ol>
+<li>
+<p>Re-export the model with NMS = True This integrates the post-processing step into the model itself, producing the required four-output tensor structure compatible with Coral TPU.</p>
+</li>
+<li>
+<p>Apply manual NMS in Python after inference if re-exporting isn’t possible.If re-exporting is not feasible, apply manual Non-Max Suppression (NMS) in the host system after inference. This involves parsing the raw output tensor and filtering overlapping bounding boxes using Intersection-over-Union (IoU) metrics in Python.</p>
+</li>
+</ol>
+<p><strong>4. Networking and Cluster Setup:</strong></p>
+<ul>
+<li>How to use Laptop as a Router?</li>
+</ul>
+<p>In order connect all the Raspberry Pi Machines using Network Switch we need to have a router to act as a Network Provider. Incase of no router availability, it is possible to use the Laptop as a router.</p>
+<p>Here we're using Windows-11 based Laptop as a Router.</p>
+<p>Step-1: Press <code>Windows + R</code></p>
+<p>Step-2: Run <code>ncpa.cpl</code></p>
+<p>Step-3: Make sure there are two adapter(s), Ethernet and Wifi.</p>
+<p>Step-4: Optional Reset all the network configuration and restart system.</p>
+<p>Step-5: Right click on the Wifi Adapter and open the Properties.</p>
+<p>Step-6: In the sharing tab, just enable the option:
+Allow other network users to connect through this computer's network connection</p>
+<p>Step-7: Press Ok and save the settings.</p>
+<p>Now, Wifi-adapter will automatically assign the IP address like <code>192.168.137.1</code> with subnet mask <code>255.255.255.0</code></p>
+<ul>
+<li>Node joining issues:
+   DNS Issue(s) in Nodes
+k3s cluster's master-node was not able to pull any images from the docker-hub due to DNS issues because on all nodes DNS was linked to <code>system-d-resolved</code> which was not allowing the nodes to access the hosts outside the cluster.</li>
+</ul>
+<p>Steps for the Solution:</p>
+<p>Run command: <code>sudo ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf</code></p>
+<p>Then run: <code>sudo cat /etc/resolv.conf</code></p>
+<p>Add in the file:
+<code>$ nameserver 8.8.8.8</code></p>
+<p><code>$ nameserver 1.1.1.1</code></p>
+<p><code>$ search .</code></p>
+<p>Save the file and restart the deployment.</p>
+<ul>
+<li>Worker-Node-4 issue</li>
+<li>⁠MinIo PV &amp; PVC issue </li>
+<li>Container orchestration conflicts</li>
+<li>
+<p>The  name of two worker node was automatically same</p>
+</li>
+<li>
+<p>MinIO Bucket Public URL of the Image issue:
+ solution:
+MinIO is not by-default configured to give the Public-URL to access the image uploaded to the Bucket. </p>
+</li>
+</ul>
+<p>We need to manually configure it:</p>
+<p>Step-1: SSH into the worker-node where Backend is running.</p>
+<p>Step-2: Into the Service file of minio minioService.js, add</p>
+<p><code>minioClient.setBucketPolicy(env.MINIO_BUCKET, JSON.stringify(policy), function (err) {
+ if (err) return console.log("Error setting policy:", err);
+console.log("Public read policy applied.");
+});</code></p>
+<ul>
+<li>Helm Access Issue:
+ Whenever upgrading or installing new Helm Repository. It is compulsory to set the KUBECONFIG for the current environment.</li>
+</ul>
+<p>KUBECONFIG can be set using command:
+<code>export KUBECONFIG=/etc/rancher/k3s/k3s.yaml</code></p>
+<p><strong>5. Frontend &amp; Backend Integration:</strong></p>
+<ul>
+<li>Database Backend connection issue </li>
+<li>Live data rendering lags</li>
+<li>⁠PgAdmin and Database connection issue</li>
+<li>⁠Too many frontend pods issue</li>
+<li>Frontend Camera Issue:</li>
+</ul>
+<p>The camera logic implement on Frontend doesn't work on http protocol, it requires Secure protocol to be implemented for that.</p>
+<p>Issue: The function getUserMedia(), only works on local host.</p>
+<p>Solution: Used Traefik Ingress to by-pass (make fake https handshake certificate) the "not-safe" error.</p>
+<p>Note: Add the IP of Master-node on development machines 'hosts' file</p>
+<ul>
+<li>Secure Image URLs Issue: The backend is running on https protocol and even the backend but the MinIO gives the URL which is based on http protocol which is not supported for frontend running on secure protocol.</li>
+</ul>
+<p>Solution: Setting the Reverse Proxy for Image URL(s)</p>
+<ul>
+<li>Github Action Pull Handler issue: Github Action Pipeline could not handle the merge-conflicts or the divergent-branches.</li>
+</ul>
+<p>Solution: Added the flag <code>git config pull.rebase false</code> before <code>git pull</code></p>
+<p><strong>6. Workload Management:</strong>
+* Task distribution
+* Merging code across members
+* GitHub collaboration issues</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.56ea9cef.min.js"></script>
+      
+    
+  </body>
+</html>

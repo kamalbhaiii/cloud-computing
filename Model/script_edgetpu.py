@@ -10,13 +10,15 @@ from background_uploader import upload_image_to_db
 
 from pycoral.utils.dataset import read_label_file
 from pycoral.adapters import detect
-from pycoral.utils.edgetpu import make_interpreter
+from pycoral.utils.edgetpu import make_interpreter, list_edge_tpus
 from pycoral.adapters.common import input_size
 from pycoral.adapters import common
 
 # === Directories ===
 TEMP_DIR = "temp"
 os.makedirs(TEMP_DIR, exist_ok=True)
+
+print(list_edge_tpus())
 
 # === Load label map ===
 label_map = read_label_file("labelmap.txt")  # Format: index label

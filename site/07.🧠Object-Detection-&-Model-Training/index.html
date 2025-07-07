@@ -1,0 +1,1082 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../06.%F0%9F%93%B7Sensor-Node-Setup/">
+      
+      
+        <link rel="next" href="../08.%F0%9F%9B%A0%EF%B8%8FBackend-Development/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.15">
+    
+    
+      
+        <title>Object Detection & Model - Cloud Computing Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.342714a4.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#workflow-diagram" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Cloud Computing Documentation" class="md-header__button md-logo" aria-label="Cloud Computing Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Cloud Computing Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Object Detection & Model
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Cloud Computing Documentation" class="md-nav__button md-logo" aria-label="Cloud Computing Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Cloud Computing Documentation
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01.%F0%9F%93%98Project-Overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Project Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02.%F0%9F%91%A5Team-Members/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Team Members
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03.%F0%9F%94%8CHardware-Architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Hardware & Architecture
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04.%F0%9F%92%BBSoftware-Stack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Software Stack
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05.%F0%9F%A7%A9System-Design-%26-Architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    System Design & Architecture
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06.%F0%9F%93%B7Sensor-Node-Setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Sensor Node
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Object Detection & Model
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Object Detection & Model
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#workflow-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      WorkFlow Diagram:
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-species-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Species Selection
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-data-collection-kaggle-pexels" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Data Collection (Kaggle &amp; Pexels)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Data Collection (Kaggle &amp; Pexels)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      📦 Sources:
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-image-annotation" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Image Annotation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-dataset-organization" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Dataset Organization
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-model-training-using-roboflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      5. Model Training (Using Roboflow)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#install-the-ultralytics-package-within-the-same-cell-where-it-is-imported" class="md-nav__link">
+    <span class="md-ellipsis">
+      Install the ultralytics package within the same cell where it is imported
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#now-import-ultralytics" class="md-nav__link">
+    <span class="md-ellipsis">
+      Now import ultralytics
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Now import ultralytics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#validation-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      📊 Validation Metrics
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dataset-tools-and-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      🧰 Dataset Tools and Usage
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../08.%F0%9F%9B%A0%EF%B8%8FBackend-Development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Backend
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09.%F0%9F%8C%90Frontend-Development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Frontend
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10.%E2%98%B8%EF%B8%8FKubernetes-Cluster-Deployment-%28k3s%29/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    K3s Deployment
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../11.%F0%9F%93%ACNotifications-System-%28Telegram-Bot%29/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Notification System
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../12.%E2%9C%85Testing-and-Validation%E2%80%90-%28to-be-edited%29/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Testing & Validation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../13.%E2%9A%A0%EF%B8%8FIssues-and-Challenges-Faced/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Issues & Challenges Faced
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#workflow-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      WorkFlow Diagram:
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1-species-selection" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. Species Selection
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-data-collection-kaggle-pexels" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. Data Collection (Kaggle &amp; Pexels)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Data Collection (Kaggle &amp; Pexels)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      📦 Sources:
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-image-annotation" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. Image Annotation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-dataset-organization" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. Dataset Organization
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-model-training-using-roboflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      5. Model Training (Using Roboflow)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#install-the-ultralytics-package-within-the-same-cell-where-it-is-imported" class="md-nav__link">
+    <span class="md-ellipsis">
+      Install the ultralytics package within the same cell where it is imported
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#now-import-ultralytics" class="md-nav__link">
+    <span class="md-ellipsis">
+      Now import ultralytics
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Now import ultralytics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#validation-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      📊 Validation Metrics
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dataset-tools-and-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      🧰 Dataset Tools and Usage
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<p>This section describes the full workflow for obtaining images, annotating them, training an object detection model using Roboflow, and preparing it for deployment on the Raspberry Pi sensor node.</p>
+<h2 id="workflow-diagram">WorkFlow Diagram:</h2>
+<p><img src="https://github.com/user-attachments/assets/22ab4cf3-0ecc-4c1d-89e3-3dcb243e531a" width="25%" /></p>
+<h2 id="1-species-selection">1. Species Selection</h2>
+<p>Identify at least three target animal species for monitoring. Examples include:</p>
+<ul>
+<li>🐈 Cats</li>
+<li>🐕 Dogs</li>
+<li>🐦 Birds</li>
+<li>🦔 Hedgehogs</li>
+<li>🐁 Mice</li>
+<li>🐀 Rats</li>
+</ul>
+<p>Ensure the selected classes are distinct in visual features and relevant to your target habitat.</p>
+<h2 id="2-data-collection-kaggle-pexels">2. Data Collection (Kaggle &amp; Pexels)</h2>
+<p>Instead of collecting data with hardware, use high-quality public image datasets.</p>
+<h3 id="sources">📦 Sources:</h3>
+<ul>
+<li>🧠 Kaggle Datasets  </li>
+<li>Visit https://www.kaggle.com/datasets and search for species-specific datasets (e.g., “cat and dog dataset”, “bird detection”)</li>
+<li>
+<p>Download relevant image datasets as .zip files</p>
+</li>
+<li>
+<p>📸 Pexels API / Website  </p>
+</li>
+<li>Visit https://www.pexels.com/search/cat/ (replace “cat” with your species)</li>
+<li>You can use the Pexels API to download copyright-free, labeled images:<ul>
+<li>https://www.pexels.com/api/</li>
+</ul>
+</li>
+</ul>
+<p>Organize the collected data into directories by class:</p>
+<p>📁 dataset/<br />
+├── cat/<br />
+├── dog/<br />
+└── bird/</p>
+<blockquote>
+<p>Note: Ensure all images are clear, high-resolution, and representative of real-world conditions.</p>
+</blockquote>
+<h2 id="3-image-annotation">3. Image Annotation</h2>
+<ol>
+<li>
+<p>Image Annotation &amp; Labeling: Label images for object detection, classification, and segmentation with a user-friendly interface.</p>
+</li>
+<li>
+<p>Dataset Preprocessing &amp; Augmentation: improve model performance with built-in tools like rotation, flipping, noise, blur, and more.</p>
+</li>
+<li>
+<p>Model Training (AutoML): Train computer vision models without code using Roboflow Train, or export datasets to use with YOLO, TensorFlow, etc.</p>
+</li>
+<li>
+<p>Model evaluation &amp; Metrics: Get performance insights through precision, recall, mAP, and visualize model results easily.</p>
+</li>
+<li>
+<p>Deployment via API &amp; Edge Devices: Deploy trained models to  edge devices like Raspberry Pi or Jetson.</p>
+</li>
+<li>
+<p>Dataset Versioning &amp; Management: Track changes with version control, manage large datasets efficiently, and collaborate with teams.</p>
+</li>
+<li>
+<p>Data Insights &amp; Labeling Analytics.</p>
+</li>
+</ol>
+<h2 id="4-dataset-organization">4. Dataset Organization</h2>
+<p>Use Roboflow to split the dataset:</p>
+<ul>
+<li>70% Training Set</li>
+<li>20% Validation Set</li>
+<li>10% Test Set</li>
+</ul>
+<p>Roboflow handles augmentation and labeling format conversions automatically.</p>
+<h2 id="5-model-training-using-roboflow">5. Model Training (Using Roboflow)</h2>
+<p>Choose a suitable model architecture (e.g., YOLOv8) in Roboflow.</p>
+<p>Training includes:</p>
+<ul>
+<li>Data preprocessing and augmentation</li>
+<li>Iterative learning with validation feedback</li>
+<li>Metric monitoring (mAP, Precision, Recall)</li>
+</ul>
+<p>No local GPU required — training is cloud-hosted.</p>
+<p>Step 1: Export Dataset from Roboflow</p>
+<p>•   Go to your Roboflow project.</p>
+<p>•   Click "Export".</p>
+<p>•   Choose the YOLOv8 format.</p>
+<p>•   Click "Download ZIP".</p>
+<p>Step 2: Upload ZIP to <a href="https://drive.google.com/">Google Drive</a></p>
+<p>•   Open Google Drive.</p>
+<p>•   Create a new folder, e.g., roboflow_yolov8_dataset.</p>
+<p>•   Upload the ZIP file into that folder.</p>
+<p>from google.colab import drive
+<code>drive.mount('/content/drive')</code> # Use drive directly since you imported it previously</p>
+<p>Step 3: Open Google Colab</p>
+<p>•   Go to Google Colab.</p>
+<p>•   Create a new notebook.</p>
+<p>•   Mount your Google Drive </p>
+<p>Step 4: Unzip Dataset</p>
+<p>•   In the Colab notebook, unzip your Roboflow dataset into a folder inside Google Drive.</p>
+<p>•   This will create folders like train/images, train/labels, valid/images, etc.</p>
+<p>Step 5: Check the data.yaml File</p>
+<p>•   Make sure the data.yaml file inside the unzipped folder points to the correct folders in Google Drive.</p>
+<p>•   You may need to adjust the paths to match where your images and labels are located.</p>
+<p>Step 6: Install YOLOv8 (Ultralytics)</p>
+<p>•   In the Colab notebook, install the Ultralytics package to use YOLOv8.</p>
+<h1 id="install-the-ultralytics-package-within-the-same-cell-where-it-is-imported">Install the ultralytics package within the same cell where it is imported</h1>
+<p><code>!pip install ultralytics --upgrade</code></p>
+<h1 id="now-import-ultralytics">Now import ultralytics</h1>
+<p><code>import ultralytics</code></p>
+<p>Step 7: Train the YOLOv8 Model</p>
+<p>•   Use the YOLOv8 training command (you just provide the path to the data.yaml file and a model like yolov8n.pt).</p>
+<p>•   The training will use the images and labels stored in Google Drive.</p>
+<p><code>model.train(</code>
+            <code>epochs=300,</code>
+    <code>batch=64,</code>
+    <code>imgsz=640,</code>
+    <code>device=0,</code>
+    <code>lr0=0.01,</code>
+    <code>patience=50,</code>
+    <code>project=os.path.join(dataset_path, 'runs'),</code>
+           <code>name='yolov8_model_nms',</code>
+    <code>exist_ok=True</code>
+    <code>)</code></p>
+<p><strong>Step8: Model Validation(using roboflow)</strong></p>
+<p>After training the YOLOv8 model, validation was performed using the best model checkpoint:
+/content/drive/MyDrive/animals/runs/yolov8_model_nms/weights/best.pt</p>
+<p>The validation was conducted using Ultralytics YOLOv8 v8.3.152 with the following system setup:</p>
+<p>•   Python Version: 3.11.13</p>
+<p>•   Torch Version: 2.6.0+cu124</p>
+<p>•   GPU: NVIDIA A100-SXM4-40GB (CUDA)</p>
+<p>🔍 Model Summary</p>
+<p>•   Total Layers: 72</p>
+<p>•   Parameters: 3,006,428</p>
+<p>•   GFLOPs: 8.1</p>
+<p>•   Gradients: 0 (fused model)</p>
+<p>⚡ Performance Speed</p>
+<p>•   Preprocessing: 0.1 ms/image</p>
+<p>•   Inference: 0.5 ms/image</p>
+<p>•   Loss Calculation: 0.0 ms/image</p>
+<p>•   Postprocessing: 2.2 ms/image</p>
+<p>✅ Interpretation</p>
+<p>The model achieved strong performance across all classes, particularly on Cat and Dog categories, with mAP@0.5 values above 0.99. The overall mAP@0.5 is 0.949, indicating high object detection accuracy. Slightly lower recall and mAP@0.5:0.95 in Bird and Person classes suggest opportunities for improvement through additional training data or targeted augmentation.</p>
+<h2 id="validation-metrics">📊 Validation Metrics</h2>
+<table>
+<thead>
+<tr>
+<th>Class</th>
+<th>Images</th>
+<th>Instances</th>
+<th>Precision (P)</th>
+<th>Recall (R)</th>
+<th>mAP@0.5</th>
+<th>mAP@0.5:0.95</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>All</strong></td>
+<td>301</td>
+<td>844</td>
+<td>0.958</td>
+<td>0.885</td>
+<td>0.94</td>
+<td>0.809</td>
+</tr>
+<tr>
+<td><strong>Cat</strong></td>
+<td>59</td>
+<td>64</td>
+<td>0.992</td>
+<td>1.000</td>
+<td>0.995</td>
+<td>0.972</td>
+</tr>
+<tr>
+<td><strong>Dog</strong></td>
+<td>86</td>
+<td>108</td>
+<td>0.984</td>
+<td>0.981</td>
+<td>0.987</td>
+<td>0.956</td>
+</tr>
+<tr>
+<td><strong>Bird</strong></td>
+<td>78</td>
+<td>231</td>
+<td>0.939</td>
+<td>0.793</td>
+<td>0.879</td>
+<td>0.657</td>
+</tr>
+<tr>
+<td><strong>Person</strong></td>
+<td>78</td>
+<td>441</td>
+<td>0.916</td>
+<td>0.765</td>
+<td>0.9</td>
+<td>0.652</td>
+</tr>
+</tbody>
+</table>
+<p>Step:9 model export:</p>
+<p>After completing the training phase, the trained model was exported using Roboflow’s export tools for deployment and inference. The model was exported in the YOLOv8 PyTorch format, optimized for CPU-based inference. Additionally, an optional export format was available via Roboflow Lite, which supports Edge TPU devices such as the Google Coral USB Accelerator.</p>
+<p>📦 Export Formats</p>
+<p>•   YOLOv8 PyTorch (.pt): Suitable for deployment on systems using Python and PyTorch.</p>
+<p>•   TensorFlow Lite (.tflite): Lightweight version for inference on edge devices (optional).</p>
+<p>🧾 Exported Assets Provided by Roboflow</p>
+<p>•   Model Weights: .pt or .tflite file depending on the selected format.</p>
+<p>•   Inference Script: A ready-to-use Python script for running the model on new images or video streams.</p>
+<p>•   Class Names &amp; Label Map: Files mapping class indices to human-readable labels, essential for interpreting predictions.</p>
+<p>This export process simplifies integration into applications, allowing for flexible deployment across a range of platforms—from local machines to embedded edge devices.</p>
+<pre><code># Define the path to a dataset YAML or a calibration dataset
+</code></pre>
+<p><code>data_yaml = "/content/drive/MyDrive/animals/config.yaml"</code> </p>
+<pre><code>    # dataset config with paths to images (for calibration)
+
+    # Export the model to TFLite with INT8 quantization
+</code></pre>
+<p><code>model.export(</code></p>
+<pre><code>`format="tflite",  # target format`
+
+`int8=True,        # enable INT8 post-training quantization`
+
+`data=data_yaml,   # provide dataset for calibration`
+
+`imgsz=640         # image size`
+</code></pre>
+<p><code>)</code></p>
+<h2 id="dataset-tools-and-usage">🧰 Dataset Tools and Usage</h2>
+<table>
+<thead>
+<tr>
+<th>Tool/Platform</th>
+<th>Purpose</th>
+<th>Details</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Open Images Dataset (OID)</strong></td>
+<td>Source of raw image data and annotations</td>
+<td>- Provided real-world images with bounding boxes<br>- Used for classes: Cat, Dog, Bird, Person</td>
+</tr>
+<tr>
+<td><strong>Roboflow</strong></td>
+<td>Dataset management and preprocessing</td>
+<td>- Converted labels to YOLOv8 format<br>- Performed data augmentation<br>- Split dataset: 70% train, 20% validation, 10% test<br>- Exported dataset for training</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.56ea9cef.min.js"></script>
+      
+    
+  </body>
+</html>
