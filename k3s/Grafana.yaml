@@ -45,6 +45,13 @@ spec:
       nodeName: worker-node-1
       securityContext:
         fsGroup: 472
+      initContainers:
+      - name: fix-permissions
+        image: busybox
+        command: ["sh", "-c", "chown -R 472:472 /var/lib/grafana"]
+        volumeMounts:
+        - name: grafana-storage
+          mountPath: /var/lib/grafana
       containers:
       - name: grafana
         image: grafana/grafana:9.5.2
@@ -56,6 +63,9 @@ spec:
         volumeMounts:
         - name: grafana-storage
           mountPath: /var/lib/grafana
+        securityContext:
+          runAsUser: 472
+          runAsGroup: 472
       volumes:
       - name: grafana-storage
         persistentVolumeClaim:
